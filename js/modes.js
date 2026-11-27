@@ -38,7 +38,16 @@ window.SS = window.SS || {};
       name: "Guess the Rarest Singer",
       hudWord: "Singer",
       placeholder: "Type a singer's name…",
-      pickQuestions: (n) => shuffle(SS.singers.CATEGORIES.map((c) => c.id)).slice(0, n),
+      // Mostly pop: each pop category once, extra pop questions to fill POP_SHARE, then other categories.
+      pickQuestions(n) {
+        const ids = SS.singers.CATEGORIES.map((c) => c.id);
+        const pop = ids.filter((id) => id.endsWith("pop"));
+        const other = shuffle(ids.filter((id) => !id.endsWith("pop")));
+        const popCount = Math.max(pop.length, Math.round(n * 0.6));
+        const picks = shuffle(pop).slice(0, popCount);
+        while (picks.length < popCount) picks.push(pop[Math.floor(Math.random() * pop.length)]);
+        return shuffle([...picks, ...other.slice(0, n - popCount)]);
+      },
       prompt(q) {
         const c = SS.singers.category(q);
         const heading = c.label.charAt(0).toUpperCase() + c.label.slice(1);

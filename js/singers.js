@@ -17,8 +17,8 @@ window.SS = window.SS || {};
   });
 
   const G = { m: "male", f: "female" };
-  // Rock and Latin are tagged in the data but not asked as categories.
-  const GENRE = { pop: "pop", country: "country", rnb: "R&B" };
+  // Rock, Latin and R&B are tagged in the data but not asked as categories.
+  const GENRE = { pop: "pop", country: "country" };
   const COUNTRY = { au: "Australian", uk: "British", ca: "Canadian" };
 
   // Category definitions: [id, label, filter]

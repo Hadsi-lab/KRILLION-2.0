@@ -3,7 +3,7 @@
 Two modes, both rewarding rare-but-correct answers:
 
 - **Guess the Rarest Song**: name a song by the given artist.
-- **Guess the Rarest Singer**: name a singer that fits a category, e.g. "female country singer", "male pop singer", "Australian singer".
+- **Guess the Rarest Singer**: name a singer that fits a category, e.g. "pop singer", "female country singer", "Australian singer".
 
 Open `index.html` in any browser (mobile or desktop). No backend.
 
@@ -45,7 +45,7 @@ node tools/check-playlist.js data/playlists/<name>.csv
 This confirms every playlist song is accepted and lists artists that are not question artists. Only `Track Name`, `Artist Name(s)` and `Popularity` are kept from the export.
 
 ## Singer mode
-`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories (singer, male/female, pop/country/R&B by gender, Australian, British, Canadian; no rock or Latin questions) are built from those fields. Within each category, singers are ranked by popularity and split into tiers (top 25% Elmo ... bottom 6% Snuffy). A known singer who doesn't fit the category gets a "doesn't count as..." message.
+`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories (singer, male/female, pop/country by gender, Australian, British, Canadian; no rock, Latin or R&B questions; about 60% of each round is pop questions) are built from those fields. Within each category, singers are ranked by popularity and split into tiers (top 25% Elmo ... bottom 6% Snuffy). A known singer who doesn't fit the category gets a "doesn't count as..." message.
 
 ## Structure
 | File | Responsibility |

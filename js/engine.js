@@ -29,6 +29,9 @@ SS.engine = {
     const q = this.currentQuestion(round);
     const result = this.mode(round).check(q, text);
     if (result.status !== "ok") return { status: "invalid", message: result.message };
+    if (round.answers.some((a) => a.answer === result.title)) {
+      return { status: "invalid", message: `You've already used ${result.title} this round. Try another!` };
+    }
     const { points } = SS.scoring.score(result.tier);
     const answer = { q, input: text, answer: result.title, tierIndex: result.tier, points };
     round.answers.push(answer);
