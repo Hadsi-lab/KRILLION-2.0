@@ -52,6 +52,12 @@
     spawnBubbles(Math.round(4 + points / 6));
   }
 
+  // Home: squash the whole gradient into one screen (light top -> deep blue bottom).
+  function homeBackdrop() {
+    ocean.classList.add("rising");
+    ocean.style.transform = "translate3d(0, 0, 0) scaleY(0.233)";
+  }
+
   function surface() {
     ocean.classList.add("rising");
     ocean.style.transform = "translate3d(0, 0, 0)";
@@ -81,7 +87,7 @@
       el.textContent = stats[el.dataset.stat].toLocaleString();
     });
     $("btn-resume").hidden = !storage.loadRound();
-    surface();
+    homeBackdrop();
     show("home");
   }
 
@@ -276,6 +282,7 @@
   $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound(); });
   $("btn-resume").addEventListener("click", () => startRound(storage.loadRound()));
   $("btn-singer").addEventListener("click", () => toast("Guess the Rarest Singer is coming soon"));
+  $("btn-lyric").addEventListener("click", () => toast("Guess the Song from the Lyric is coming soon"));
   $("answer-form").addEventListener("submit", onSubmit);
   $("btn-next").addEventListener("click", onNext);
   $("btn-quit").addEventListener("click", () => {
