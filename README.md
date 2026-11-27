@@ -5,7 +5,9 @@ Two modes, both rewarding rare-but-correct answers:
 - **Guess the Rarest Song**: name a song by the given artist.
 - **Guess the Rarest Singer**: name a singer that fits a category, e.g. "female country singer", "male pop singer", "Australian singer".
 
-Open `index.html` in any browser (mobile or desktop). No build step or backend.
+Open `index.html` in any browser (mobile or desktop). No backend.
+
+`dist/snuffleupagus-songs.html` is a single self-contained copy (styles and scripts inlined) for hosting or sharing. Rebuild it after changes with `node tools/build.js`. The game avoids browser pop-ups and real form submission so it also works inside sandboxed hosts.
 
 ## How a round works
 - 7 questions per round (random artists or random singer categories).

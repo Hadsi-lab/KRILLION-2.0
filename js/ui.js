@@ -170,7 +170,7 @@
   }
 
   function onSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!round || round.phase !== "question") return;
     const input = $("answer-input");
     const text = input.value.trim();
@@ -287,10 +287,24 @@
   $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound("song"); });
   $("btn-singer").addEventListener("click", () => { storage.clearRound(); startRound("singer"); });
   $("btn-resume").addEventListener("click", () => { const r = storage.loadRound(); startRound(r.mode, r); });
+  // Handle Enter and the button directly: sandboxed hosts block real form submission.
   $("answer-form").addEventListener("submit", onSubmit);
+  $("btn-submit").addEventListener("click", onSubmit);
+  $("answer-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.isComposing) onSubmit(e);
+  });
   $("btn-next").addEventListener("click", onNext);
+  // Two-tap quit (no browser pop-up, which sandboxed pages block).
+  let quitArmed = null;
   $("btn-quit").addEventListener("click", () => {
-    if (confirm("Quit this round? Your progress will be lost.")) { stopTimer(); storage.clearRound(); round = null; renderHome(); }
+    const btn = $("btn-quit");
+    if (!quitArmed) {
+      btn.textContent = "Tap again to quit (progress is lost)";
+      quitArmed = setTimeout(() => { quitArmed = null; btn.textContent = "Quit round"; }, 3000);
+      return;
+    }
+    clearTimeout(quitArmed); quitArmed = null; btn.textContent = "Quit round";
+    stopTimer(); storage.clearRound(); round = null; renderHome();
   });
   $("btn-again").addEventListener("click", () => startRound(round.mode));
   $("btn-home").addEventListener("click", renderHome);

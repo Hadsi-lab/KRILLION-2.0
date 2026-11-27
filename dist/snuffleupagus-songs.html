@@ -1,0 +1,2455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#cfe8ff" />
+  <title>Snuffleupagus Songs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --ice: #e8f5ff;
+  --ice-2: #cfe8ff;
+  --sky: #5ab4ff;
+  --azure: #2f7dfa;
+  --indigo: #4b3fd6;
+  --navy: #0a1a44;
+  --midnight: #030a1f;
+  --ink: #0b1a3c;
+  --ink-soft: #3d5683;
+  --card: rgba(255, 255, 255, 0.86);
+  --card-border: rgba(255, 255, 255, 0.7);
+  --radius: 22px;
+  --sink-ms: 2200ms;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background: var(--ice);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+[hidden] { display: none !important; }
+
+/* ---------- Ocean background ---------- */
+/* 500vh tall: top 100vh is the resting light shade; sinking translates up to 80%. */
+.ocean {
+  position: fixed; left: 0; right: 0; top: 0;
+  height: 500vh;
+  z-index: 0;
+  background: linear-gradient(180deg,
+    #e8f5ff 0%, #cfe8ff 12%, #8cc8ff 26%, #4fa3f0 40%,
+    #2f7dfa 52%, #2a4fd0 63%, #3a2fa8 74%, #16205e 86%, #030a1f 100%);
+  transform: translate3d(0, 0, 0);
+  transform-origin: top center;
+  transition: transform var(--sink-ms) cubic-bezier(.22, .8, .25, 1);
+  will-change: transform;
+}
+.ocean.rising { transition-duration: 900ms; transition-timing-function: cubic-bezier(.4, 0, .2, 1); }
+
+.bubbles { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.bubble {
+  position: absolute; bottom: -30px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, .7);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.6), rgba(255,255,255,.05) 60%);
+  animation: rise linear forwards;
+}
+@keyframes rise {
+  to { transform: translate3d(var(--drift, 0), -115vh, 0); opacity: 0; }
+}
+
+/* ---------- Layout ---------- */
+.app {
+  position: relative; z-index: 2;
+  width: 100%; max-width: 600px;
+  margin: 0 auto;
+  padding: max(28px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+.screen { display: flex; flex-direction: column; gap: 22px; min-height: calc(100dvh - 56px); justify-content: center; }
+.screen.enter { animation: fadeUp .35s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } }
+
+/* ---------- Home ---------- */
+.brand { text-align: center; }
+.logo {
+  font-weight: 800;
+  font-size: clamp(2.2rem, 10.5vw, 3.8rem);
+  line-height: .95;
+  letter-spacing: -.01em;
+  color: var(--navy);
+}
+.logo span {
+  display: block;
+  font-size: .62em;
+  background: linear-gradient(90deg, var(--azure), var(--indigo));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.tagline { margin: 14px auto 0; max-width: 30ch; color: var(--ink-soft); font-size: 1.02rem; line-height: 1.4; }
+
+.modes { display: grid; gap: 14px; }
+.mode-card {
+  all: unset; box-sizing: border-box; cursor: pointer;
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 10px 30px rgba(20, 60, 140, .14);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.mode-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(47, 125, 250, .25); }
+.mode-card:active { transform: scale(.98); }
+.mode-card:focus-visible, .btn:focus-visible, .resume:focus-visible { outline: 3px solid var(--azure); outline-offset: 3px; }
+.mode-card.is-soon { opacity: .7; }
+.mode-icon {
+  flex: none; width: 54px; height: 54px; border-radius: 16px;
+  display: grid; place-items: center;
+  background: linear-gradient(145deg, var(--azure), var(--indigo));
+  box-shadow: 0 6px 16px rgba(75, 63, 214, .35);
+}
+.is-soon .mode-icon { background: linear-gradient(145deg, var(--sky), var(--azure)); }
+.mode-icon svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mode-text { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mode-title { font-weight: 600; font-size: 1.12rem; color: var(--navy); }
+.mode-desc { color: var(--ink-soft); font-size: .92rem; line-height: 1.35; }
+.soon {
+  font-style: normal; font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--ice-2); color: var(--azure); padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
+}
+.chev { font-size: 2rem; color: var(--azure); opacity: .6; line-height: 1; }
+
+.resume {
+  all: unset; box-sizing: border-box; cursor: pointer; text-align: center;
+  padding: 14px; border-radius: 999px;
+  background: var(--navy); color: #fff; font-weight: 600;
+  box-shadow: 0 8px 20px rgba(10, 26, 68, .3);
+}
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stats > div {
+  background: rgba(255, 255, 255, .75); border-radius: 14px; padding: 10px 6px; text-align: center;
+  border: 1px solid rgba(255, 255, 255, .8);
+}
+.stats dt { font-size: .7rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+.stats dd { font-size: 1.3rem; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+
+.legend { background: rgba(255, 255, 255, .8); border-radius: 16px; padding: 12px 16px; border: 1px solid rgba(255, 255, 255, .8); }
+.legend summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+.legend p { margin: 10px 0; color: var(--ink-soft); font-size: .92rem; line-height: 1.4; }
+.tier-list { list-style: none; display: grid; gap: 6px; }
+.tier-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tier-list .pts { font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+
+/* ---------- Tier badges (6 distinct treatments) ---------- */
+.tier-badge {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  font-weight: 800; color: #fff; white-space: nowrap;
+}
+.tier-badge .tier-word { font-weight: 500; opacity: .9; }
+.tier-badge.sm { padding: 3px 10px; font-size: .8rem; }
+.t0 { background: #8a9bb8; }
+.t1 { background: #5f86c4; }
+.t2 { background: #2f9be0; }
+.t3 { background: linear-gradient(135deg, #1fb5d6, #2f7dfa); }
+.t4 { background: linear-gradient(135deg, #4b3fd6, #8a4fe8); box-shadow: 0 0 18px rgba(138, 79, 232, .5); }
+.t5 {
+  background: linear-gradient(135deg, #f7c948, #f59f3a, #f7c948);
+  background-size: 200% 100%;
+  color: #3b2300;
+  box-shadow: 0 0 24px rgba(247, 201, 72, .7);
+  animation: shimmer 2.4s linear infinite;
+}
+.tmiss { background: #c3cbd8; color: #3d4a63; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---------- Game ---------- */
+.screen#screen-game { justify-content: flex-start; padding-top: 8px; }
+.hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pill {
+  background: var(--card); border: 1px solid var(--card-border);
+  padding: 8px 14px; border-radius: 999px; font-weight: 600; color: var(--navy);
+  font-variant-numeric: tabular-nums; box-shadow: 0 4px 12px rgba(20, 60, 140, .12);
+  min-width: 96px; text-align: center;
+}
+.timer { position: relative; width: 60px; height: 60px; display: grid; place-items: center; }
+.timer svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.timer circle { fill: var(--card); stroke-width: 4; }
+.timer .track { stroke: rgba(47, 125, 250, .15); }
+.timer .ring { fill: none; stroke: var(--azure); stroke-linecap: round; stroke-dasharray: 119.38; stroke-dashoffset: 0; transition: stroke .3s; }
+.timer.low .ring { stroke: #e5484d; }
+.timer span { position: relative; font-weight: 800; font-size: 1.2rem; color: var(--navy); font-variant-numeric: tabular-nums; }
+.timer.low span { color: #c8343a; }
+
+.progress { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.progress span { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .4); }
+.progress span.done { background: #fff; }
+.progress span.current { background: var(--sky); box-shadow: 0 0 0 1.5px #fff; }
+
+.card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 28px 20px;
+  box-shadow: 0 18px 40px rgba(10, 30, 80, .18);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+}
+.prompt-label { text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; font-weight: 600; color: var(--ink-soft); }
+.artist { margin: 8px 0 22px; font-size: clamp(2rem, 9vw, 3rem); font-weight: 800; color: var(--navy); line-height: 1.05; overflow-wrap: anywhere; }
+
+.answer-form { display: flex; gap: 8px; }
+.answer-form input {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 1.1rem;
+  padding: 14px 16px; border-radius: 14px;
+  border: 2px solid #c6dcf5; background: #fff; color: var(--ink);
+  outline: none; transition: border-color .15s;
+}
+.answer-form input:focus { border-color: var(--azure); }
+.answer-form.shake { animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.error { min-height: 1.3em; margin-top: 10px; color: #c8343a; font-weight: 500; font-size: .95rem; }
+
+.btn {
+  border: 0; cursor: pointer; font-weight: 600; font-size: 1rem;
+  padding: 14px 20px; border-radius: 14px; transition: transform .12s, filter .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: linear-gradient(135deg, var(--azure), var(--indigo)); color: #fff; box-shadow: 0 6px 16px rgba(47, 125, 250, .35); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: #fff; color: var(--navy); border: 1.5px solid #c6dcf5; }
+
+.feedback { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: fadeUp .3s ease both; }
+.feedback .tier-badge { font-size: 1.25rem; padding: 10px 20px; animation: pop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+.fb-points { font-size: 3rem; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; line-height: 1; }
+.fb-answer { font-size: 1.05rem; color: var(--ink); }
+.fb-answer strong { font-weight: 700; }
+.fb-rare { font-size: .9rem; color: var(--ink-soft); }
+.feedback .btn { margin-top: 8px; min-width: 180px; }
+
+.quit {
+  align-self: center; cursor: pointer; font-size: .85rem; font-weight: 500;
+  background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .7); color: var(--ink-soft);
+  padding: 6px 14px; border-radius: 999px;
+}
+
+/* ---------- Results ---------- */
+.results-card { display: flex; flex-direction: column; gap: 12px; }
+.final-score { font-size: 3.6rem; font-weight: 800; color: var(--navy); line-height: 1; font-variant-numeric: tabular-nums; }
+.final-score small { font-size: .4em; color: var(--ink-soft); font-weight: 600; }
+.final-note { color: var(--ink-soft); }
+.result-list { list-style: none; display: grid; gap: 8px; text-align: left; margin-top: 6px; }
+.result-list li {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
+  background: #fff; border: 1px solid #dbe9f9; border-radius: 14px; padding: 10px 14px;
+  animation: fadeUp .35s ease both;
+}
+.r-artist { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+.r-song { font-weight: 600; color: var(--ink); grid-column: 1; overflow-wrap: anywhere; }
+.r-song.miss { color: #8a96ab; font-style: italic; font-weight: 500; }
+.r-right { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.r-points { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.result-actions .primary { grid-column: 1 / -1; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); z-index: 10;
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  padding: 12px 20px; border-radius: 999px; max-width: calc(100% - 32px); text-align: center;
+  background: var(--navy); color: #fff; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .3); transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (min-width: 900px) {
+  .app { max-width: 760px; }
+  .modes { grid-template-columns: 1fr 1fr; }
+  .mode-card { flex-direction: column; align-items: flex-start; padding: 26px; min-height: 210px; }
+  .chev { align-self: flex-end; margin-top: auto; }
+  .card { padding: 40px 36px; }
+}
+
+@media (max-width: 380px) {
+  .answer-form { flex-direction: column; }
+  .stats dd { font-size: 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --sink-ms: 1ms; }
+  .ocean.rising { transition-duration: 1ms; }
+  .t5, .bubble, .screen.enter, .feedback, .feedback .tier-badge, .result-list li { animation: none; }
+  .bubbles { display: none; }
+}
+
+</style>
+</head>
+<body>
+  <!-- Tall light-to-dark gradient. Translated upward to "sink" on rare answers. -->
+  <div class="ocean" id="ocean" aria-hidden="true"></div>
+  <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+
+  <main class="app">
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <header class="brand">
+        <h1 class="logo">Snuffleupagus<span>Songs</span></h1>
+        <p class="tagline">Give the answer nobody else would. The rarer it is, the deeper you sink.</p>
+      </header>
+
+      <button class="resume" id="btn-resume" type="button" hidden>Resume your round →</button>
+
+      <div class="modes">
+        <button class="mode-card" id="btn-play" type="button">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+          </span>
+          <span class="mode-text">
+            <span class="mode-title">Guess the Rarest Song</span>
+            <span class="mode-desc">We pick the singer. You name their least-known song.</span>
+          </span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+
+        <button class="mode-card" id="btn-singer" type="button">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v5" /><path d="M8 22h8" /></svg>
+          </span>
+          <span class="mode-text">
+            <span class="mode-title">Guess the Rarest Singer</span>
+            <span class="mode-desc">We pick the category. You name the singer nobody else would think of.</span>
+          </span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+
+      </div>
+
+      <dl class="stats" id="stats">
+        <div><dt>Rounds today</dt><dd data-stat="roundsToday">0</dd></div>
+        <div><dt>Best today</dt><dd data-stat="bestToday">0</dd></div>
+        <div><dt>Best ever</dt><dd data-stat="bestScore">0</dd></div>
+        <div><dt>Total points</dt><dd data-stat="totalPoints">0</dd></div>
+      </dl>
+
+      <details class="legend">
+        <summary>How scoring works</summary>
+        <p>Every round has 7 questions and 25 seconds per question. Name a song by the artist, or a singer that fits the category. Popular answers score little. Rare ones score big.</p>
+        <ol class="tier-list" id="tier-list"></ol>
+      </details>
+    </section>
+
+    <!-- GAME -->
+    <section class="screen" id="screen-game" hidden>
+      <div class="hud">
+        <span class="pill" id="hud-question">Song 1 / 7</span>
+        <div class="timer" id="timer" role="timer" aria-label="Time remaining">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="19" /><circle class="ring" id="timer-ring" cx="22" cy="22" r="19" /></svg>
+          <span id="timer-text">25</span>
+        </div>
+        <span class="pill" id="hud-score">0 pts</span>
+      </div>
+
+      <div class="progress" id="progress" aria-hidden="true"></div>
+
+      <div class="card" id="question-card">
+        <p class="prompt-label" id="prompt-label">Name a song by</p>
+        <h2 class="artist" id="artist-name">Artist</h2>
+
+        <form class="answer-form" id="answer-form" autocomplete="off">
+          <input id="answer-input" type="text" placeholder="Type a song title…" aria-label="Your answer"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="120" />
+          <button type="button" class="btn primary" id="btn-submit">Submit</button>
+        </form>
+        <p class="error" id="answer-error" role="alert"></p>
+
+        <div class="feedback" id="feedback" hidden>
+          <div class="tier-badge" id="fb-badge"><span class="tier-name"></span><span class="tier-word"></span></div>
+          <p class="fb-points" id="fb-points">+0</p>
+          <p class="fb-answer" id="fb-answer"></p>
+          <p class="fb-rare" id="fb-rare"></p>
+          <button type="button" class="btn primary" id="btn-next">Next song</button>
+        </div>
+      </div>
+
+      <button type="button" class="quit" id="btn-quit">Quit round</button>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="screen" id="screen-results" hidden>
+      <div class="card results-card">
+        <p class="prompt-label">Round complete</p>
+        <p class="final-score"><span id="final-score">0</span><small> / 700</small></p>
+        <p class="final-note" id="final-note"></p>
+        <ol class="result-list" id="result-list"></ol>
+        <div class="result-actions">
+          <button type="button" class="btn primary" id="btn-again">Play again</button>
+          <button type="button" class="btn ghost" id="btn-share">Copy results</button>
+          <button type="button" class="btn ghost" id="btn-home">Home</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+/* js/data/artists.js */
+/*
+ * Question database: "Name a song by <artist>".
+ *
+ * Each artist lists accepted songs grouped by rarity tier:
+ *   tiers[0] = most popular (Elmo)  ...  tiers[5] = rarest (Snuffy)
+ *
+ * Tiers are estimates of relative Spotify popularity (stream counts / popularity
+ * score). Every artist covers the full spectrum: many popular songs at the top,
+ * only a handful at the rarest tier. Replace with real Spotify data later
+ * without touching the validation or scoring code.
+ *
+ * `aliases` maps a canonical title to extra accepted spellings. Case,
+ * punctuation, accents, "&"/"and" and a leading "The/A/An" are already handled
+ * by the validator, so only list genuinely different names here.
+ */
+window.SS = window.SS || {};
+
+SS.ARTISTS = [
+  {
+    id: "taylor-swift",
+    name: "Taylor Swift",
+    tiers: [
+      ["Shake It Off", "Blank Space", "Love Story", "Anti-Hero", "Cruel Summer", "You Belong with Me", "Bad Blood"],
+      ["Style", "Delicate", "Lover", "Cardigan", "Look What You Made Me Do", "We Are Never Ever Getting Back Together", "All Too Well", "Wildest Dreams", "I Knew You Were Trouble"],
+      ["Enchanted", "I Can Do It with a Broken Heart", "22", "Willow", "Karma", "Mastermind", "Getaway Car", "August", "Fortnight", "Our Song", "Me!", "Teardrops on My Guitar", "The 1", "Red"],
+      ["Mine", "Fearless", "...Ready for It?", "Champagne Problems", "Exile", "Betty", "State of Grace", "Gorgeous", "Fifteen", "White Horse", "Back to December"],
+      ["Clean", "Dear John", "The Last Great American Dynasty", "Tolerate It", "Long Live", "Holy Ground", "Dress", "Invisible String"],
+      ["Mary's Song (Oh My My My)", "Tied Together with a Smile", "Superstar"]
+    ],
+    aliases: { "...Ready for It?": ["Are You Ready for It"] }
+  },
+  {
+    id: "the-beatles",
+    name: "The Beatles",
+    tiers: [
+      ["Hey Jude", "Let It Be", "Yesterday", "Here Comes the Sun", "Come Together"],
+      ["Twist and Shout", "Help!", "Yellow Submarine", "All You Need Is Love", "I Want to Hold Your Hand", "Blackbird", "In My Life", "Something", "Hello, Goodbye"],
+      ["Eleanor Rigby", "Strawberry Fields Forever", "Penny Lane", "Love Me Do", "A Hard Day's Night", "Can't Buy Me Love", "Get Back", "Ob-La-Di, Ob-La-Da", "While My Guitar Gently Weeps", "Here, There and Everywhere", "Norwegian Wood", "Lucy in the Sky with Diamonds", "Drive My Car"],
+      ["Across the Universe", "I Saw Her Standing There", "Ticket to Ride", "Paperback Writer", "Revolution", "Day Tripper", "She Loves You", "Michelle", "Back in the U.S.S.R.", "Helter Skelter", "Got to Get You into My Life", "With a Little Help from My Friends"],
+      ["Dear Prudence", "I Am the Walrus", "Taxman", "Rain", "Martha My Dear", "Golden Slumbers", "Because", "I've Just Seen a Face", "Tomorrow Never Knows"],
+      ["Wild Honey Pie", "Dig It", "Flying", "Her Majesty"]
+    ],
+    aliases: { "Norwegian Wood": ["Norwegian Wood (This Bird Has Flown)"] }
+  },
+  {
+    id: "queen",
+    name: "Queen",
+    tiers: [
+      ["Bohemian Rhapsody", "Don't Stop Me Now", "Another One Bites the Dust", "We Will Rock You"],
+      ["Under Pressure", "We Are the Champions", "Somebody to Love", "I Want to Break Free", "Radio Ga Ga", "Killer Queen"],
+      ["Crazy Little Thing Called Love", "Bicycle Race", "Fat Bottomed Girls", "The Show Must Go On", "Who Wants to Live Forever", "A Kind of Magic", "I Want It All", "Love of My Life"],
+      ["Innuendo", "Hammer to Fall", "Too Much Love Will Kill You", "You're My Best Friend", "Friends Will Be Friends", "Flash", "Seven Seas of Rhye", "Tie Your Mother Down"],
+      ["'39", "Spread Your Wings", "Now I'm Here", "Save Me", "Play the Game", "Stone Cold Crazy", "Mustapha", "Good Old-Fashioned Lover Boy"],
+      ["Bijou", "Lazing on a Sunday Afternoon", "Sail Away Sweet Sister"]
+    ],
+    aliases: { "Radio Ga Ga": ["Radio Gaga"], "Flash": ["Flash's Theme"] }
+  },
+  {
+    id: "michael-jackson",
+    name: "Michael Jackson",
+    tiers: [
+      ["Billie Jean", "Beat It", "Thriller", "Smooth Criminal"],
+      ["Don't Stop 'Til You Get Enough", "Man in the Mirror", "Rock with You", "Black or White", "Bad"],
+      ["The Way You Make Me Feel", "Wanna Be Startin' Somethin'", "They Don't Care About Us", "Remember the Time", "Dirty Diana", "Human Nature", "P.Y.T. (Pretty Young Thing)", "Heal the World", "You Rock My World", "Earth Song"],
+      ["Off the Wall", "Leave Me Alone", "Scream", "Jam", "Ben", "Liberian Girl", "Will You Be There", "You Are Not Alone", "Speed Demon", "Another Part of Me"],
+      ["Stranger in Moscow", "Dangerous", "In the Closet", "Give In to Me", "Blood on the Dance Floor", "Who Is It", "Workin' Day and Night"],
+      ["Little Susie", "Morphine", "Is It Scary"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "abba",
+    name: "ABBA",
+    tiers: [
+      ["Dancing Queen", "Mamma Mia", "Gimme! Gimme! Gimme! (A Man After Midnight)"],
+      ["The Winner Takes It All", "Waterloo", "Take a Chance on Me", "Lay All Your Love on Me", "Money, Money, Money", "Super Trouper", "Chiquitita"],
+      ["Fernando", "Voulez-Vous", "Knowing Me, Knowing You", "Does Your Mother Know", "SOS", "I Have a Dream", "Honey, Honey", "Thank You for the Music", "One of Us"],
+      ["The Name of the Game", "Summer Night City", "Slipping Through My Fingers", "Ring Ring", "I Do, I Do, I Do, I Do, I Do", "Angeleyes", "Head over Heels"],
+      ["Eagle", "When All Is Said and Done", "Our Last Summer", "Hole in Your Soul", "The Day Before You Came", "Under Attack", "I Still Have Faith in You", "Don't Shut Me Down"],
+      ["King Kong Song", "Dum Dum Diddle", "Two for the Price of One"]
+    ],
+    aliases: { "Money, Money, Money": ["Money Money"], "I Do, I Do, I Do, I Do, I Do": ["I Do I Do"] }
+  },
+  {
+    id: "ed-sheeran",
+    name: "Ed Sheeran",
+    tiers: [
+      ["Shape of You", "Perfect", "Thinking Out Loud", "Photograph", "Bad Habits"],
+      ["Shivers", "Azizam", "Castle on the Hill", "Galway Girl", "The A Team", "Happier", "Lego House", "I Don't Care", "Eyes Closed"],
+      ["Don't", "Sapphire", "Sing", "Give Me Love", "Dive", "Supermarket Flowers", "Kiss Me", "Afterglow", "Overpass Graffiti", "Beautiful People"],
+      ["Small Bump", "Camera", "Old Phone", "Drunk", "You Need Me, I Don't Need You", "Tenerife Sea", "Bloodstream", "Nancy Mulligan", "Visiting Hours", "Barcelona", "Save Myself"],
+      ["One", "Runaway", "Wake Me Up", "Grade 8", "Autumn Leaves", "New Man", "Tides"],
+      ["The City", "U.N.I."]
+    ],
+    aliases: { "The A Team": ["A Team"] }
+  },
+  {
+    id: "coldplay",
+    name: "Coldplay",
+    tiers: [
+      ["Yellow", "Something Just Like This", "Viva la Vida", "The Scientist", "Fix You", "A Sky Full of Stars"],
+      ["Clocks", "Paradise", "Hymn for the Weekend", "Adventure of a Lifetime", "My Universe", "Higher Power"],
+      ["Speed of Sound", "Trouble", "In My Place", "Magic", "Violet Hill", "Every Teardrop Is a Waterfall", "Charlie Brown", "Shiver", "Up&Up", "Orphans"],
+      ["Lovers in Japan", "Talk", "Warning Sign", "Princess of China", "Don't Panic", "Everglow", "Strawberry Swing", "Life in Technicolor", "Sparks", "Midnight"],
+      ["Daylight", "Amsterdam", "Swallowed in the Sea", "Major Minus", "Spies", "42", "Oceans", "Army of One"],
+      ["Brothers & Sisters", "Bigger Stronger", "Careful Where You Stand"]
+    ],
+    aliases: { "Life in Technicolor": ["Life in Technicolour"], "42": ["Forty Two", "Forty-Two"] }
+  },
+  {
+    id: "adele",
+    name: "Adele",
+    tiers: [
+      ["Someone Like You", "Rolling in the Deep", "Hello", "Set Fire to the Rain", "Skyfall"],
+      ["Easy on Me", "When We Were Young", "Make You Feel My Love", "Chasing Pavements", "Send My Love (To Your New Lover)", "Rumour Has It"],
+      ["Turning Tables", "Water Under the Bridge", "Hometown Glory", "Love in the Dark", "I Drink Wine", "Don't You Remember", "Oh My God", "All I Ask"],
+      ["One and Only", "Lovesong", "He Won't Go", "Remedy", "Million Years Ago", "Daydreamer", "To Be Loved", "Cold Shoulder"],
+      ["Take It All", "I'll Be Waiting", "Tired", "Best for Last", "My Little Love", "Sweetest Devotion", "Cry Your Heart Out", "Strangers by Nature"],
+      ["Right as Rain", "First Love", "My Same"]
+    ],
+    aliases: { "Rumour Has It": ["Rumor Has It"] }
+  },
+  {
+    id: "elton-john",
+    name: "Elton John",
+    tiers: [
+      ["Tiny Dancer", "Rocket Man", "Your Song", "I'm Still Standing", "Cold Heart (PNAU Remix)"],
+      ["Bennie and the Jets", "Can You Feel the Love Tonight", "Don't Go Breaking My Heart", "Candle in the Wind", "Crocodile Rock", "Goodbye Yellow Brick Road", "Sacrifice"],
+      ["Saturday Night's Alright for Fighting", "Daniel", "I Guess That's Why They Call It the Blues", "Don't Let the Sun Go Down on Me", "Circle of Life", "Sorry Seems to Be the Hardest Word", "Nikita", "Levon", "Hold Me Closer"],
+      ["Philadelphia Freedom", "Someone Saved My Life Tonight", "Funeral for a Friend", "Island Girl", "Mona Lisas and Mad Hatters", "Blue Eyes", "Honky Cat", "Pinball Wizard", "Border Song"],
+      ["Madman Across the Water", "Indian Sunset", "Burn Down the Mission", "Grey Seal", "Harmony", "Take Me to the Pilot", "Amoreena", "Mellow"],
+      ["Skyline Pigeon", "Lady Samantha", "Empty Sky"]
+    ],
+    aliases: { "Bennie and the Jets": ["Benny and the Jets"], "Rocket Man": ["Rocketman"] }
+  },
+  {
+    id: "billie-eilish",
+    name: "Billie Eilish",
+    tiers: [
+      ["Bad Guy", "Birds of a Feather", "Lovely", "Ocean Eyes", "What Was I Made For?"],
+      ["When the Party's Over", "Happier Than Ever", "Everything I Wanted", "Wildflower", "Lunch", "No Time to Die", "Bury a Friend"],
+      ["Therefore I Am", "Bellyache", "Idontwannabeyouanymore", "You Should See Me in a Crown", "Chihiro", "Your Power", "Copycat", "Six Feet Under", "The 30th", "Lost Cause"],
+      ["Wish You Were Gay", "My Strange Addiction", "I Love You", "Xanny", "Bitches Broken Hearts", "Watch", "Halley's Comet", "NDA", "TV", "Billie Bossa Nova", "Skinny", "L'Amour de Ma Vie"],
+      ["Ilomilo", "8", "Listen Before I Go", "Getting Older", "Oxytocin", "Goldwing", "Male Fantasy", "The Greatest", "Blue"],
+      ["Hostage", "Party Favor", "Everybody Dies"]
+    ],
+    aliases: { "Idontwannabeyouanymore": ["I Don't Wanna Be You Anymore"], "8": ["Eight"] }
+  },
+  {
+    id: "bruno-mars",
+    name: "Bruno Mars",
+    tiers: [
+      ["Just the Way You Are", "Uptown Funk", "Locked Out of Heaven", "When I Was Your Man", "Die with a Smile", "That's What I Like"],
+      ["24K Magic", "Grenade", "Treasure", "The Lazy Song", "Talking to the Moon", "Marry You", "Count on Me"],
+      ["Finesse", "It Will Rain", "Versace on the Floor", "Chunky", "Gorilla", "Young Girls", "Runaway Baby"],
+      ["Calling All My Lovelies", "Too Good to Say Goodbye", "Perm", "Straight Up & Down", "Liquor Store Blues"],
+      ["Moonshine", "If I Knew", "Our First Time", "Show Me", "Natalie"],
+      ["Somewhere in Brooklyn", "The Other Side", "Money Make Her Smile"]
+    ],
+    aliases: { "24K Magic": ["24 Karat Magic"] }
+  },
+  {
+    id: "oasis",
+    name: "Oasis",
+    tiers: [
+      ["Wonderwall", "Don't Look Back in Anger", "Champagne Supernova", "Live Forever", "Stop Crying Your Heart Out"],
+      ["Stand by Me", "Supersonic", "Some Might Say", "Whatever", "Slide Away", "Half the World Away", "The Masterplan", "Cigarettes & Alcohol", "Rock 'n' Roll Star"],
+      ["Little by Little", "Morning Glory", "She's Electric", "Roll with It", "Shakermaker", "All Around the World", "Acquiesce", "D'You Know What I Mean?", "Lyla", "The Importance of Being Idle"],
+      ["Talk Tonight", "Cast No Shadow", "Go Let It Out", "The Hindu Times", "Songbird", "Married with Children", "Columbia", "Up in the Sky", "Hey Now!", "Hello"],
+      ["Fade Away", "Rockin' Chair", "It's Gettin' Better (Man!!)", "Bag It Up", "Magic Pie", "Who Feels Love?", "Falling Down", "I Hope, I Think, I Know"],
+      ["Digsy's Dinner", "Fade In-Out", "(It's Good) To Be Free"]
+    ],
+    aliases: { "(It's Good) To Be Free": ["It's Good to Be Free"], "D'You Know What I Mean?": ["Do You Know What I Mean"] }
+  },
+  {
+    id: "fleetwood-mac",
+    name: "Fleetwood Mac",
+    tiers: [
+      ["Dreams", "Go Your Own Way", "The Chain", "Landslide", "Everywhere"],
+      ["Rhiannon", "Little Lies", "Don't Stop", "Gypsy", "Songbird", "Never Going Back Again", "Seven Wonders", "Sara"],
+      ["Tusk", "Hold Me", "Big Love", "Say You Love Me", "You Make Loving Fun", "Silver Springs", "Second Hand News", "Gold Dust Woman", "Albatross"],
+      ["Black Magic Woman", "Sisters of the Moon", "Storms", "Man of the World", "Oh Well", "Need Your Love So Bad", "Monday Morning", "I Don't Want to Know"],
+      ["Sentimental Lady", "Hypnotized", "Family Man", "Isn't It Midnight", "Save Me", "That's All for Everyone", "Brown Eyes", "Warm Ways"],
+      ["Station Man", "Bermuda Triangle", "Dragonfly"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "ac-dc",
+    name: "AC/DC",
+    tiers: [
+      ["Highway to Hell", "Back in Black", "Thunderstruck", "You Shook Me All Night Long"],
+      ["T.N.T.", "Hells Bells", "It's a Long Way to the Top (If You Wanna Rock 'n' Roll)", "Dirty Deeds Done Dirt Cheap", "Shoot to Thrill", "For Those About to Rock (We Salute You)", "Whole Lotta Rosie"],
+      ["Rock 'n' Roll Train", "Moneytalks", "Let There Be Rock", "Have a Drink on Me", "Hard as a Rock", "Big Balls", "Problem Child", "Who Made Who", "Jailbreak", "Sin City"],
+      ["Heatseeker", "Riff Raff", "The Jack", "High Voltage", "Shot Down in Flames", "Touch Too Much", "Ride On", "Rock or Bust", "Shot in the Dark", "Girls Got Rhythm"],
+      ["Kicked in the Teeth", "Love Hungry Man", "Night Prowler", "What Do You Do for Money Honey", "Spoilin' for a Fight", "Bad Boy Boogie", "Overdose"],
+      ["Crabsody in Blue", "Love Song", "Stick Around"]
+    ],
+    aliases: { "T.N.T.": ["Dynamite"], "Moneytalks": ["Money Talks"] }
+  },
+  {
+    id: "kylie-minogue",
+    name: "Kylie Minogue",
+    tiers: [
+      ["Can't Get You Out of My Head", "Padam Padam", "Spinning Around", "The Loco-Motion"],
+      ["I Should Be So Lucky", "Love at First Sight", "Dancing", "Slow", "All the Lovers"],
+      ["Better the Devil You Know", "Come into My World", "In Your Eyes", "On a Night Like This", "Kids", "Hand on Your Heart", "Especially for You", "Please Stay", "Step Back in Time", "Tension", "Shocked"],
+      ["Confide in Me", "Wow", "2 Hearts", "Get Outta My Way", "Je ne sais pas pourquoi", "Got to Be Certain", "Red Blooded Woman", "Chocolate", "Timebomb", "Magic", "Celebration"],
+      ["Did It Again", "Some Kind of Bliss", "Breathe", "Your Disco Needs You", "Give Me Just a Little More Time", "Never Too Late", "Wouldn't Change a Thing", "Tears on My Pillow"],
+      ["Cowboy Style", "Too Far", "Limbo"]
+    ],
+    aliases: { "The Loco-Motion": ["Locomotion"], "2 Hearts": ["Two Hearts"] }
+  },
+  {
+    id: "eminem",
+    name: "Eminem",
+    tiers: [
+      ["Lose Yourself", "Without Me", "Mockingbird", "The Real Slim Shady", "Godzilla"],
+      ["'Till I Collapse", "Rap God", "Superman", "Love the Way You Lie", "Stan", "Not Afraid", "Sing for the Moment", "Cleanin' Out My Closet"],
+      ["When I'm Gone", "My Name Is", "Venom", "Beautiful", "Lucky You", "The Monster", "Just Lose It", "Like Toy Soldiers", "Berzerk", "Houdini"],
+      ["Kamikaze", "Killshot", "Business", "The Way I Am", "Criminal", "White America", "Square Dance", "Kill You", "Mosh"],
+      ["Brain Damage", "Rock Bottom", "If I Had", "Cinderella Man", "Bad Guy", "Evil Twin", "Kim", "Same Song & Dance"],
+      ["Infinite", "It's OK", "Searchin'"]
+    ],
+    aliases: { "'Till I Collapse": ["Til I Collapse"] }
+  },
+  {
+    id: "dua-lipa",
+    name: "Dua Lipa",
+    tiers: [
+      ["Levitating", "Don't Start Now", "New Rules", "One Kiss", "Houdini"],
+      ["Physical", "Break My Heart", "Be the One", "IDGAF", "Dance the Night", "Training Season", "Hallucinate"],
+      ["Love Again", "Blow Your Mind (Mwah)", "Hotter Than Hell", "Electricity", "Illusion", "Kiss and Make Up", "Last Dance", "Scared to Be Lonely", "Fever", "Pretty Please"],
+      ["Boys Will Be Boys", "Good in Bed", "Cool", "Future Nostalgia", "Thinking 'Bout You", "These Walls", "Whatcha Doing", "Falling Forever", "Anything for Love"],
+      ["Lost in Your Light", "Genesis", "Begging", "No Goodbyes", "Want To", "Garden"],
+      ["Homesick", "Room for 2", "Bad Together"]
+    ],
+    aliases: { "Room for 2": ["Room for Two"] }
+  }
+];
+
+</script>
+  <script>
+/* js/data/artists-playlists.js */
+/*
+ * Artists added from shared playlists (see js/data/playlists.js).
+ *
+ * Same format as artists.js: tiers[0] = most popular ... tiers[5] = rarest.
+ * Every song from the source playlist is included. Other songs were added so
+ * each artist spans all six tiers.
+ *
+ * Benson Boone and Alex Warren are tiered directly from the playlist's Spotify
+ * popularity scores (the playlist holds 25+ of their songs). Other artists are
+ * hand-tiered, using the playlist's popularity scores where available.
+ */
+window.SS = window.SS || {};
+
+SS.ARTISTS.push(
+  {
+    id: "benson-boone",
+    name: "Benson Boone",
+    tiers: [
+      ["Beautiful Things", "In the Stars", "Mystical Magical", "Slow It Down", "Sorry I'm Here for Someone Else", "Nights Like These", "Ghost Town"],
+      ["The Time of My Life", "Mr Electric Blue", "Pretty Slowly", "Cry", "Before You", "To Love Someone", "Death Wish Love"],
+      ["Momma Song", "Let Me Go", "I Wanna Be the One You Call", "Be Someone", "Work of Art", "Lovely Darling", "Man in Me", "Coffee Cake"],
+      ["Little Runaway", "Wanted Man", "My Greatest Fear", "Young American Heart", "Hello Love", "Drunk in My Mind"],
+      ["Empty Heart Shaped Box", "Take Me Home", "Forever and a Day", "Reminds Me of You", "What Do You Want"],
+      ["What Was", "Better Alone", "Room for 2", "Sugar Sweet"]
+    ],
+    aliases: { "Mr Electric Blue": ["Mr. Electric Blue"] }
+  },
+  {
+    id: "alex-warren",
+    name: "Alex Warren",
+    tiers: [
+      ["Ordinary", "Eternity", "Carry You Home", "Fever Dream", "Bloodline"],
+      ["Before You Leave Me", "Burning Down", "Save You a Seat", "Passenger", "Troubled Waters"],
+      ["Chasing Shadows", "You Can't Stop This", "On My Mind", "Everything", "First Time on Earth", "Change Your Mind"],
+      ["The Outside", "Headlights", "Never Be Far", "You'll Be Alright, Kid"],
+      ["Catch My Breath", "Heaven Without You", "Getaway Car", "How Could You (Be OK)"],
+      ["Screaming Underwater", "Yard Sale", "Who I Am"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "sia",
+    name: "Sia",
+    tiers: [
+      ["Chandelier", "Cheap Thrills", "Unstoppable", "Snowman", "Titanium", "Elastic Heart"],
+      ["The Greatest", "Never Give Up", "Bird Set Free", "Alive", "Move Your Body", "Breathe Me"],
+      ["Together", "Big Girls Cry", "Courage to Change", "Ho Ho Ho", "Candy Cane Lane", "Fire Meet Gasoline", "Soon We'll Be Found", "Clap Your Hands"],
+      ["Buttons", "Dressed in Black", "Eye of the Needle", "Free Me", "Rainbow", "Helium", "Saved My Life", "Santa's Coming for Us"],
+      ["Footprints", "Angel by the Wings", "You've Changed", "Cellophane", "Death by Chocolate"],
+      ["Taken for Granted", "Drink to Get Drunk", "Sweet Potato"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "sabrina-carpenter",
+    name: "Sabrina Carpenter",
+    tiers: [
+      ["Espresso", "Please Please Please", "Taste", "Manchild", "Nonsense", "Feather"],
+      ["Bed Chem", "Juno", "Good Graces", "When Did You Get Hot?", "Tears", "Because I Liked a Boy", "Coincidence"],
+      ["Dumb & Poetic", "Slim Pickins", "Sharpest Tool", "Lie to Girls", "Don't Smile", "Skinny Dipping", "Thumbs", "House Tour", "Read Your Mind", "Fast Times"],
+      ["Sue Me", "Vicious", "Already Over", "Tornado Warnings", "Nobody's Son", "Sugar Talking", "My Man on Willpower", "Go Go Juice", "Opposite", "We Almost Broke Up Again Last Night"],
+      ["Decode", "Eyes Wide Open", "Can't Blame a Girl for Trying", "Paris", "Pushing 20", "Exhale", "Never Getting Laid", "Don't Worry I'll Make You Worry"],
+      ["Smoke and Fire", "We'll Be the Stars", "The Middle of Starting Over"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "shawn-mendes",
+    name: "Shawn Mendes",
+    tiers: [
+      ["Treat You Better", "There's Nothing Holdin' Me Back", "Stitches", "Señorita", "Mercy"],
+      ["In My Blood", "If I Can't Have You", "I Know What You Did Last Summer", "Lost in Japan", "Wonder", "Monster"],
+      ["Youth", "Mutual", "Life of the Party", "Never Be Alone", "Something Big", "Why Why Why", "It'll Be Okay", "When You're Gone", "Summer of Love", "Imagination"],
+      ["Ruin", "Nervous", "Fallin' All in You", "Patience", "Call My Friends", "Teach Me How to Love", "Bad Reputation", "Kid in Love", "A Little Too Much"],
+      ["Aftertaste", "Strings", "Like This", "Show You", "Particular Taste", "Where Were You in the Morning?", "Perfectly Wrong"],
+      ["Nobody Knows", "Heart of Gold", "The Mountain"]
+    ],
+    aliases: { "There's Nothing Holdin' Me Back": ["There's Nothing Holding Me Back"] }
+  },
+  {
+    id: "tate-mcrae",
+    name: "Tate McRae",
+    tiers: [
+      ["Greedy", "You Broke Me First", "Exes", "Just Keep Watching", "Sports Car"],
+      ["She's All I Wanna Be", "Revolving Door", "It's OK I'm OK", "Run for the Hills", "2 Hands", "Uh Oh"],
+      ["Feel Like Shit", "Chaotic", "Miss Possessive", "Dear God", "Rubberband", "That Way", "Purple Lace Bra", "What Would You Do?", "Siren Sounds"],
+      ["Hate Myself", "Nostalgia", "Means I Care", "Guilty Conscience", "I'm So Gone"],
+      ["Stupid", "Tear Myself Apart", "All My Friends Are Fake"],
+      ["One Day"]
+    ],
+    aliases: { "2 Hands": ["Two Hands"] }
+  },
+  {
+    id: "gracie-abrams",
+    name: "Gracie Abrams",
+    tiers: [
+      ["That's So True", "I Love You, I'm Sorry", "Close to You"],
+      ["Risk", "I Miss You, I'm Sorry", "Us.", "I Know It Won't Work", "Free Now"],
+      ["Hit the Wall", "Blowing Smoke", "Where Do We Go Now?", "Feels Like", "Difficult", "21", "Mess It Up"],
+      ["Tough Love", "Packing It Up", "I Told You Things", "Cool", "Let It Happen", "Block Me Out", "Normal Thing", "Amelie"],
+      ["Unlearn You", "Rockland", "Camden", "This Is What the Drugs Are For", "Full Machine"],
+      ["Minor", "Stay"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "olivia-rodrigo",
+    name: "Olivia Rodrigo",
+    tiers: [
+      ["Drivers License", "Good 4 U", "Vampire", "Deja Vu", "Traitor", "Favorite Crime", "Stupid Song"],
+      ["Happier", "Enough for You", "Get Him Back!", "Bad Idea Right?", "Brutal", "Jealousy, Jealousy"],
+      ["Obsessed", "Lacy", "Making the Bed", "The Grudge", "Logical", "Ballad of a Homeschooled Girl", "All-American Bitch", "1 Step Forward, 3 Steps Back", "Hope Ur OK", "Can't Catch Me Now"],
+      ["Pretty Isn't Pretty", "Love Is Embarrassing", "Teenage Dream", "So American", "All I Want"],
+      ["Scared of My Guitar", "Girl I've Always Been", "Stranger", "Just for a Moment"],
+      ["The Rose Song", "Wondering"]
+    ],
+    aliases: { "Good 4 U": ["Good for You"], "Hope Ur OK": ["Hope You're OK"] }
+  },
+  {
+    id: "chappell-roan",
+    name: "Chappell Roan",
+    tiers: [
+      ["Good Luck, Babe!", "Pink Pony Club", "Hot to Go!", "The Giver", "Red Wine Supernova", "Femininomenon"],
+      ["Casual", "Naked in Manhattan", "The Subway", "After Midnight"],
+      ["Super Graphic Ultra Modern Girl", "Coffee", "Kaleidoscope", "My Kink Is Karma", "Picture You"],
+      ["California", "Guilty Pleasure"],
+      ["School Nights", "Good Hurt", "Bitter"],
+      ["Die Young"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "onerepublic",
+    name: "OneRepublic",
+    tiers: [
+      ["Counting Stars", "Apologize", "I Ain't Worried", "Secrets", "I Lived"],
+      ["Good Life", "Love Runs Out", "If I Lose Myself", "Stop and Stare", "I Don't Wanna Wait", "Rescue Me", "Run"],
+      ["Wherever I Go", "Kids", "Someday", "Better Days", "West Coast", "All the Right Moves", "Feel Again", "Say (All I Need)", "Sunshine"],
+      ["Lullaby", "Preacher", "Mercy", "Life in Color", "Marchin On", "Come Home", "Didn't I", "Burning Bridges"],
+      ["Mirage", "Connection", "Lose Somebody", "Wild Life", "Christmas Without You"],
+      ["Waking Up", "Au Revoir"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "miley-cyrus",
+    name: "Miley Cyrus",
+    tiers: [
+      ["Flowers", "Wrecking Ball", "Party in the U.S.A.", "Angels Like You", "The Climb"],
+      ["We Can't Stop", "Midnight Sky", "Malibu", "Used to Be Young", "Prisoner", "Adore You"],
+      ["See You Again", "7 Things", "Can't Be Tamed", "Slide Away", "River", "Jaded", "Plastic Hearts", "Mother's Daughter", "Who Owns My Heart"],
+      ["Younger Now", "Fly on the Wall", "Start All Over", "Liberty Walk", "End of the World", "Easy Lover", "Doctor (Work It Out)", "4x4", "Bad Karma"],
+      ["Dooo It!", "Inspired", "Golden G String", "Handstand", "Week Without You", "Island"],
+      ["Karen Don't Be Sad", "The Floyd Song (Sunrise)", "Twinkle Song"]
+    ],
+    aliases: { "7 Things": ["Seven Things"] }
+  },
+  {
+    id: "imagine-dragons",
+    name: "Imagine Dragons",
+    tiers: [
+      ["Believer", "Demons", "Thunder", "Radioactive", "Enemy", "Bones"],
+      ["Natural", "Whatever It Takes", "It's Time", "On Top of the World", "Bad Liar", "Birds"],
+      ["Follow You", "Sharks", "Wrecked", "I Bet My Life", "Shots", "Zero", "Next to Me", "Walking the Wire"],
+      ["Monday", "Gold", "Amsterdam", "Tiptoe", "Nothing Left to Say", "Hear Me", "Lonely", "Wake Up", "Eyes Closed"],
+      ["Friction", "Polaroid", "Dream", "Rise Up", "Mouth of the River", "Cutthroat", "Easy Come Easy Go"],
+      ["Tokyo", "Selene"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "katy-perry",
+    name: "Katy Perry",
+    tiers: [
+      ["Roar", "Dark Horse", "Firework", "Last Friday Night (T.G.I.F.)", "Teenage Dream", "California Gurls"],
+      ["Hot n Cold", "I Kissed a Girl", "E.T.", "The One That Got Away", "Wide Awake", "Part of Me", "Unconditionally"],
+      ["Birthday", "Chained to the Rhythm", "Never Really Over", "Bon Appétit", "Swish Swish", "Harleys in Hawaii", "Daisies", "Thinking of You", "This Is How We Do"],
+      ["Waking Up in Vegas", "Ur So Gay", "Hey Hey Hey", "Legendary Lovers", "Smile", "Woman's World", "Walking on Air", "Peacock", "Circle the Drain"],
+      ["Mannequin", "Lost", "Self Inflicted", "Pearl", "Not Like the Movies", "Ghost", "Choose Your Battles"],
+      ["Trust in Me", "Growing Pains", "Faith Won't Fail"]
+    ],
+    aliases: { "California Gurls": ["California Girls"], "Hot n Cold": ["Hot and Cold"], "E.T.": ["ET"] }
+  },
+  {
+    id: "harry-styles",
+    name: "Harry Styles",
+    tiers: [
+      ["As It Was", "Watermelon Sugar", "Sign of the Times", "Adore You", "Late Night Talking"],
+      ["Falling", "Golden", "Lights Up", "Satellite", "Matilda", "Music for a Sushi Restaurant", "Kiwi"],
+      ["Sweet Creature", "Two Ghosts", "Daylight", "Fine Line", "Cherry", "She", "Grapejuice", "Keep Driving", "Little Freak"],
+      ["Canyon Moon", "Treat People with Kindness", "Carolina", "Only Angel", "Boyfriends", "Cinema", "Daydreaming", "Love of My Life"],
+      ["Meet Me in the Hallway", "Woman", "To Be So Lonely", "From the Dining Table"],
+      ["Sunflower, Vol. 6", "Ever Since New York"]
+    ],
+    aliases: { "Sign of the Times": ["Sign of the Time"], "Sunflower, Vol. 6": ["Sunflower"] }
+  },
+  {
+    id: "rihanna",
+    name: "Rihanna",
+    tiers: [
+      ["Umbrella", "Diamonds", "We Found Love", "Only Girl (In the World)", "Work", "Stay", "Love on the Brain"],
+      ["Rude Boy", "Don't Stop the Music", "S&M", "Needed Me", "Disturbia", "What's My Name?", "Take a Bow", "Lift Me Up"],
+      ["Pon de Replay", "SOS", "Kiss It Better", "Desperado", "Bitch Better Have My Money", "Man Down", "Cheers (Drink to That)", "Hate That I Love You", "Unfaithful", "Where Have You Been", "California King Bed"],
+      ["Russian Roulette", "Te Amo", "Same Ol' Mistakes", "Woo", "Consideration", "Skin", "Rehab", "Shut Up and Drive", "Pour It Up"],
+      ["Cockiness (Love It)", "Never Ending", "James Joint", "Hard", "Rockstar 101", "Wait Your Turn", "Fire Bomb"],
+      ["Rush", "Here I Go Again", "There's a Thug in My Life"]
+    ],
+    aliases: { "Bitch Better Have My Money": ["BBHMM"], "S&M": ["S and M"] }
+  },
+  {
+    id: "maroon-5",
+    name: "Maroon 5",
+    tiers: [
+      ["Memories", "Girls Like You", "Payphone", "Sugar", "Moves Like Jagger", "Animals", "She Will Be Loved", "This Love"],
+      ["One More Night", "Maps", "Don't Wanna Know", "What Lovers Do", "Misery", "Harder to Breathe", "Sunday Morning"],
+      ["Daylight", "Love Somebody", "Makes Me Wonder", "Won't Go Home Without You", "Wait", "Beautiful Mistakes", "Nobody's Love", "Lost"],
+      ["Cold", "Never Gonna Leave This Bed", "Tangled", "Shiver", "Secret", "Wake Up Call", "Lucky Strike", "Give a Little More"],
+      ["Through with You", "Must Get Out", "Not Falling Apart", "The Sun", "Nothing Lasts Forever", "Little of Your Time"],
+      ["Sweetest Goodbye", "Not Coming Home", "Tickets"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "justin-bieber",
+    name: "Justin Bieber",
+    tiers: [
+      ["Love Yourself", "Sorry", "Peaches", "Baby", "Ghost", "Stay", "What Do You Mean?"],
+      ["Intentions", "Yummy", "Holy", "Anyone", "Boyfriend", "As Long as You Love Me", "Beauty and a Beat", "Never Say Never", "Monster", "Daisies"],
+      ["One Time", "Mistletoe", "Lonely", "Company", "Purpose", "Hold On", "Somebody", "Off My Face", "Die for You", "Hailey", "Confident"],
+      ["Somebody to Love", "U Smile", "Eenie Meenie", "Pray", "Changes", "Habitual", "Heartbreaker", "All That Matters", "Life Is Worth Living"],
+      ["Down to Earth", "Favorite Girl", "First Dance", "Bigger", "Catching Feelings", "Thought of You"],
+      ["Love Me", "Up", "Common Denominator"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "ariana-grande",
+    name: "Ariana Grande",
+    tiers: [
+      ["7 Rings", "Thank U, Next", "Positions", "We Can't Be Friends (Wait for Your Love)", "Yes, And?", "Into You", "Side to Side", "No Tears Left to Cry"],
+      ["Dangerous Woman", "God Is a Woman", "Break Free", "Problem", "Bang Bang", "One Last Time", "The Way", "Love Me Harder", "Breathin", "34+35", "Santa Tell Me"],
+      ["Stuck with U", "Rain on Me", "Imagine", "Needy", "Bloodline", "The Boy Is Mine", "Supernatural", "Twilight Zone", "POV", "Moonlight", "Greedy", "Be Alright", "Ghostin"],
+      ["Honeymoon Avenue", "Tattooed Heart", "Baby I", "Motive", "Fake Smile", "Bad Idea", "Everyday", "Thinking Bout You", "Safety Net", "Nasty"],
+      ["Piano", "Daydreamin'", "Lovin' It", "Hands on Me", "Knew Better", "Better Off", "Eternal Sunshine", "Intro (End of the World)"],
+      ["Put Your Hearts Up", "Right There", "Only 1"]
+    ],
+    aliases: { "7 Rings": ["Seven Rings"], "Thank U, Next": ["Thank You Next"], "34+35": ["34 35", "Thirty Four Thirty Five"] }
+  },
+  {
+    id: "lady-gaga",
+    name: "Lady Gaga",
+    tiers: [
+      ["Bad Romance", "Poker Face", "Shallow", "Just Dance", "Die with a Smile", "Abracadabra", "Always Remember Us This Way"],
+      ["Paparazzi", "Telephone", "Alejandro", "Born This Way", "Million Reasons", "Applause", "Rain on Me", "Hold My Hand", "Bloody Mary"],
+      ["Judas", "The Edge of Glory", "Marry the Night", "Yoü and I", "LoveGame", "Stupid Love", "Disease", "Do What U Want", "Perfect Illusion", "Joanne", "Monster", "Speechless"],
+      ["911", "Sour Candy", "Venus", "Dancin' in Circles", "Teeth", "G.U.Y.", "Dance in the Dark", "Government Hooker", "Scheiße", "Hair", "Eh, Eh (Nothing Else I Can Say)", "Vanish into You"],
+      ["Manicure", "Swine", "Sexxx Dreams", "Fashion of His Love", "Electric Chapel", "Heavy Metal Lover", "Boys Boys Boys", "Summerboy"],
+      ["Brown Eyes", "Disco Heaven", "I Like It Rough"]
+    ],
+    aliases: { "Scheiße": ["Scheisse"], "Yoü and I": ["You and I"] }
+  },
+  {
+    id: "shakira",
+    name: "Shakira",
+    tiers: [
+      ["Hips Don't Lie", "Whenever, Wherever", "Waka Waka (This Time for Africa)", "Dai Dai", "She Wolf", "Bzrp Music Sessions, Vol. 53"],
+      ["Chantaje", "La Tortura", "Can't Remember to Forget You", "Underneath Your Clothes", "TQG", "Beautiful Liar", "Loca", "Rabiosa", "Te Felicito"],
+      ["Objection (Tango)", "Ojos Así", "Estoy Aquí", "Suerte", "Inevitable", "Me Enamoré", "Clandestino", "Puntería", "Soltera", "La Bicicleta", "Empire", "Try Everything"],
+      ["Dónde Están los Ladrones?", "Tú", "Pies Descalzos, Sueños Blancos", "Did It Again", "Gypsy", "Addicted to You", "Las de la Intuición", "Antología", "Moscas en la Casa", "Dare (La La La)"],
+      ["Ciega, Sordomuda", "Octavo Día", "Si Te Vas", "No", "Nada", "Je l'aime à mourir", "Illegal", "Animal City"],
+      ["Magia", "Peligro"]
+    ],
+    aliases: {
+      "Bzrp Music Sessions, Vol. 53": ["Music Sessions 53", "Session 53", "Shakira Bzrp", "Bzrp 53"],
+      "Whenever, Wherever": ["Suerte (Whenever Wherever)"]
+    }
+  },
+  {
+    id: "twenty-one-pilots",
+    name: "Twenty One Pilots",
+    tiers: [
+      ["Stressed Out", "Heathens", "Ride", "Car Radio"],
+      ["Chlorine", "Heavydirtysoul", "Tear in My Heart", "Lane Boy", "Holding On to You", "Jumpsuit", "Level of Concern", "Shy Away", "My Blood"],
+      ["Migraine", "Fairly Local", "Guns for Hands", "Trees", "Kitchen Sink", "The Judge", "House of Gold", "Doubt", "Polarize", "Nico and the Niners", "Levitate", "Morph", "Overcompensate", "Next Semester"],
+      ["Neon Gravestones", "Saturday", "The Outside", "Truce", "Ode to Sleep", "Goner", "Cut My Lip", "Smithereens", "Bandito", "Pet Cheetah", "Choker", "Message Man"],
+      ["Addict with a Pen", "Air Catcher", "Johnny Boy", "Implicit Demand for Proof", "Taxi Cab", "Semi-Automatic", "Clear", "March to the Sea"],
+      ["Glowing Eyes", "Anathema", "Two"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "drake",
+    name: "Drake",
+    tiers: [
+      ["God's Plan", "One Dance", "Hotline Bling", "Passionfruit", "In My Feelings", "Rich Flex", "Jimmy Cooks"],
+      ["Started from the Bottom", "Hold On, We're Going Home", "Nice for What", "Toosie Slide", "Laugh Now Cry Later", "Headlines", "Take Care", "Marvins Room", "Too Good", "Fake Love", "Nonstop", "Controlla", "Best I Ever Had"],
+      ["Find Your Love", "Worst Behavior", "0 to 100 / The Catch Up", "Energy", "Know Yourself", "Over", "Successful", "Massive", "Teenage Fever", "Chicago Freestyle", "Wants and Needs", "Search & Rescue", "Family Matters", "Push Ups", "Knife Talk"],
+      ["Furthest Thing", "Tuscan Leather", "Doing It Wrong", "Look What You've Done", "Jungle", "Free Spirit", "Days in the East", "Emotionless", "Sticky", "Falling Back", "Texts Go Green", "Feel No Ways"],
+      ["Fireworks", "Karaoke", "Thank Me Now", "Shut It Down", "Light Up", "The Resistance", "Cece's Interlude", "Paris Morton Music", "Shabang"],
+      ["Lust for Life", "Houstatlantavegas", "Brand New"]
+    ],
+    aliases: { "0 to 100 / The Catch Up": ["0 to 100", "Zero to 100"], "Marvins Room": ["Marvin's Room"] }
+  },
+  {
+    id: "zara-larsson",
+    name: "Zara Larsson",
+    tiers: [
+      ["Lush Life", "Never Forget You", "Symphony", "Stateside", "Midnight Sun"],
+      ["Ain't My Fault", "Ruin My Life", "I Would Like", "All the Time", "Uncover", "Can't Tame Her"],
+      ["So Good", "Wow", "Talk About Love", "Words", "Look What You've Done", "Poster Girl", "She's Not Me", "Girls Like"],
+      ["Only You", "Love Me Land", "Don't Worry About Me", "Funny"],
+      ["Bad Boys", "Rooftop"],
+      ["Make That Money Girl"]
+    ],
+    aliases: { "Stateside": ["Stateside + Zara Larsson"] }
+  },
+  {
+    id: "noah-kahan",
+    name: "Noah Kahan",
+    tiers: [
+      ["Stick Season", "Dial Drunk", "Northern Attitude"],
+      ["She Calls Me Back", "Homesick", "Everywhere, Everything", "Orange Juice", "Call Your Mom", "Forever"],
+      ["The View Between Villages", "Your Needs, My Needs", "Paul Revere", "False Confidence", "Hurt Somebody", "Growing Sideways", "All My Love", "Come Over", "Halloween"],
+      ["Mess", "Godlight", "Maine", "Glue Myself Shut", "Part of Me", "Still"],
+      ["Young Blood", "Carlo's Song", "Cynic", "Animal"],
+      ["Busyhead"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "post-malone",
+    name: "Post Malone",
+    tiers: [
+      ["Circles", "Sunflower", "Rockstar", "Congratulations", "Better Now", "I Had Some Help"],
+      ["White Iverson", "Psycho", "Wow.", "Goodbyes", "I Fall Apart", "Too Young", "Go Flex", "Take What You Want", "Chemical", "Mourning", "I Like You (A Happier Song)", "Pour Me a Drink"],
+      ["Hollywood's Bleeding", "Allergic", "Enemies", "Motley Crew", "Cooped Up", "Insane", "Staring at the Sun", "Die for Me", "Feeling Whitney", "Stay", "Candy Paint", "Over Now", "Saint-Tropez"],
+      ["Paranoid", "Spoil My Night", "Same Bitches", "Takin' Shots", "Otherside", "Blame It on Me", "I'm Gonna Be", "Myself"],
+      ["Leave", "Big Lie", "Deja Vu", "Up There", "Patient"],
+      ["Never Understand", "Hollywood Dreams", "Git Wit U"]
+    ],
+    aliases: { "Sunflower": ["Sunflower (Spider-Man: Into the Spider-Verse)"] }
+  },
+  {
+    id: "charlie-puth",
+    name: "Charlie Puth",
+    tiers: [
+      ["Attention", "We Don't Talk Anymore", "See You Again", "One Call Away", "Light Switch"],
+      ["How Long", "Marvin Gaye", "Left and Right", "Dangerously", "Done for Me", "Cheating on You", "Loser"],
+      ["Mother", "Girlfriend", "That's Hilarious", "The Way I Am", "Suffer", "Changes", "Smells Like Me", "Charlie Be Quiet!"],
+      ["Boy", "Somebody Told Me", "Slow It Down", "Some Type of Love", "Losing My Mind", "Empty Cups", "Lipstick"],
+      ["Through It All", "Hard on Yourself", "I Warned Myself", "Patient"],
+      ["Look at Me Now", "Up All Night"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "selena-gomez",
+    name: "Selena Gomez",
+    tiers: [
+      ["Lose You to Love Me", "Come & Get It", "Same Old Love", "Good for You", "Wolves", "Calm Down"],
+      ["Hands to Myself", "Bad Liar", "It Ain't Me", "Back to You", "Single Soon", "Rare", "Love You Like a Love Song", "Who Says", "We Don't Talk Anymore"],
+      ["Naturally", "Kill Em with Kindness", "Fetish", "Look at Her Now", "Boyfriend", "Ice Cream", "De Una Vez", "Slow Down", "The Heart Wants What It Wants", "Taki Taki"],
+      ["Me & the Rhythm", "Round & Round", "Hit the Lights", "Falling Down", "Tell Me Something I Don't Know", "Vulnerable", "Crowded Room", "Dance Again", "Souvenir", "Kinda Crazy"],
+      ["Sober", "Camouflage", "Nobody", "Survivors", "Ring", "Feel Me", "Love On"],
+      ["Stars Dance", "Birthday", "Write Your Name"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "tame-impala",
+    name: "Tame Impala",
+    tiers: [
+      ["The Less I Know the Better", "Let It Happen", "Dracula", "New Person, Same Old Mistakes", "Borderline"],
+      ["Feels Like We Only Go Backwards", "Eventually", "Elephant", "Lost in Yesterday", "Is It True", "Breathe Deeper"],
+      ["Apocalypse Dreams", "Mind Mischief", "Yes I'm Changing", "'Cause I'm a Man", "Solitude Is Bliss", "Patience", "Instant Destiny", "Expectation", "The Moment"],
+      ["Lucidity", "Alter Ego", "Why Won't They Talk to Me?", "Past Life", "Posthumous Forgiveness", "One More Year", "On Track", "It Might Be Time"],
+      ["Gossip", "Disciples", "Love/Paranoia", "Nangs", "Reality in Motion", "Endors Toi", "Keep On Lying", "Half Full Glass of Wine"],
+      ["Desire Be Desire Go", "Runway, Houses, City, Clouds", "41 Mosquitoes Flying in Formation"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "the-chainsmokers",
+    name: "The Chainsmokers",
+    tiers: [
+      ["Closer", "Something Just Like This", "Don't Let Me Down", "Paris", "Roses"],
+      ["Sick Boy", "This Feeling", "Takeaway", "Call You Mine", "High", "All We Know", "Setting Fires", "Everybody Hates Me"],
+      ["Honest", "Young", "Inside Out", "iPad", "Who Do You Love", "Selfie", "Kanye", "Wake Up Alone", "Side Effects", "Hope"],
+      ["Beach House", "Siren", "Push My Luck", "Riptide", "Kills You Slowly", "Do You Mean", "Somebody", "The One"],
+      ["Last Day Alive", "Bloodstream", "Break Up Every Night", "You Owe Me", "Until You Were Gone"],
+      ["Waterbed", "Good Intentions"]
+    ],
+    aliases: { "Selfie": ["#Selfie"] }
+  },
+  {
+    id: "calvin-harris",
+    name: "Calvin Harris",
+    tiers: [
+      ["One Kiss", "Summer", "This Is What You Came For", "Feel So Close", "How Deep Is Your Love", "Outside"],
+      ["Blame", "Slide", "Feels", "Sweet Nothing", "I Need Your Love", "Under Control", "Promises", "Miracle", "Potion", "Giant"],
+      ["Bounce", "Acceptable in the 80s", "Flashback", "The Girls", "I'm Not Alone", "Ready for the Weekend", "Let's Go", "Thinking About You", "Pray to God", "My Way"],
+      ["Faking It", "We'll Be Coming Back", "Drinking from the Bottle", "Open Wide", "Heatstroke", "Rollin", "Nuh Ready Nuh Ready", "Colours"],
+      ["Merrymaking at My Place", "Vegas", "Yeah Yeah Yeah La La La"],
+      ["The Rain", "Neon Rocks", "Love Souvenir"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "david-guetta",
+    name: "David Guetta",
+    tiers: [
+      ["Titanium", "I'm Good (Blue)", "Without You", "Memories", "When Love Takes Over"],
+      ["Hey Mama", "Play Hard", "Turn Me On", "Where Them Girls At", "Sexy Bitch", "Lovers on the Sun", "Baby Don't Hurt Me", "I Don't Wanna Wait", "She Wolf (Falling to Pieces)", "2U"],
+      ["Gettin' Over You", "Dangerous", "Bad", "Flames", "Don't Leave Me Alone", "Little Bad Girl", "Love Don't Let Me Go", "Crazy What Love Can Do", "Who's That Chick?"],
+      ["Just a Little More Love", "The World Is Mine", "Delirious", "Shot Me Down", "Goodbye", "What I Did for Love"],
+      ["Baby When the Light", "Tomorrow Can Wait", "Love Is Gone"],
+      ["Money"]
+    ],
+    aliases: { "Sexy Bitch": ["Sexy Chick"] }
+  },
+  {
+    id: "the-script",
+    name: "The Script",
+    tiers: [
+      ["Hall of Fame", "Breakeven", "The Man Who Can't Be Moved", "Superheroes"],
+      ["For the First Time", "Nothing", "If You Could See Me Now", "Rain", "Science & Faith"],
+      ["Six Degrees of Separation", "We Cry", "Talk You Down", "Before the Worst", "No Good in Goodbye", "Arms Open", "Never Seen Anything \"Quite Like You\"", "Paint the Town Green", "Millionaires"],
+      ["If You Ever Come Back", "Exit Wounds", "Walk Away", "Glowing", "Flares", "Hail Rain or Sunshine"],
+      ["Anybody There", "Fall for Anything", "The End Where I Begin", "Live Like We're Dying", "I'm Yours"],
+      ["Long Gone and Moved On", "This = Love"]
+    ],
+    aliases: { "Breakeven": ["Break Even"], "This = Love": ["This Equals Love"] }
+  },
+  {
+    id: "nsync",
+    name: "*NSYNC",
+    tiers: [
+      ["Bye Bye Bye", "It's Gonna Be Me", "Tearin' Up My Heart"],
+      ["I Want You Back", "This I Promise You", "Girlfriend", "Pop", "Gone"],
+      ["God Must Have Spent a Little More Time on You", "Sailing", "Merry Christmas, Happy Holidays", "Better Place", "Space Cowboy", "I'll Never Stop", "Thinking of You"],
+      ["Digital Get Down", "For the Girl Who Has Everything", "Here We Go", "I Drive Myself Crazy", "Celebrity", "Just Got Paid"],
+      ["Giddy Up", "Crazy for You", "Bringin' da Noise"],
+      ["Riddle", "Something Like You"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "glass-animals",
+    name: "Glass Animals",
+    tiers: [
+      ["Heat Waves", "Gooey"],
+      ["Tangerine", "Your Love (Déjà Vu)", "Youth", "Pork Soda", "Black Mambo", "Hazey"],
+      ["Life Itself", "Season 2 Episode 3", "Space Ghost Coast to Coast", "Tokyo Drifting", "Agnes", "The Other Side of Paradise", "Dreamland", "Toes"],
+      ["Cocoa Hooves", "Psylla", "Wyrd", "Take a Slice", "Mama's Gun", "Pools", "Intruxx", "Creatures in Heaven"],
+      ["Hot Sugar", "Cane Shuga", "Poplar St", "It's All So Incredibly Loud", "Helium", "Melon and the Coconut"],
+      ["Exxus"]
+    ],
+    aliases: {}
+  },
+  {
+    id: "doja-cat",
+    name: "Doja Cat",
+    tiers: [
+      ["Say So", "Kiss Me More", "Woman", "Paint the Town Red", "Need to Know"],
+      ["Streets", "Juicy", "Agora Hills", "Like That", "Boss Bitch", "Get Into It (Yuh)", "You Right"],
+      ["Mooo!", "Candy", "Rules", "Tia Tamera", "Go to Town", "Demons", "Attention", "Vegas", "Freak", "Ain't Shit", "Jealous Type"],
+      ["Born Again", "Cyber Sex", "Bottom Bitch", "Talk Dirty", "Shine", "Won't Bite", "Naked", "Payday", "Options"],
+      ["Cookie Jar", "Wine Pon You", "Morning Light", "Fancy"],
+      ["So High", "Beautiful", "Roll with Us"]
+    ],
+    aliases: {}
+  }
+);
+
+</script>
+  <script>
+/* js/data/playlists.js */
+/*
+ * Shared playlists whose artists and songs have been added to the question pool.
+ * Source exports (title, artists, popularity) live in data/playlists/.
+ * Run `node tools/check-playlist.js data/playlists/<file>.csv` after adding one
+ * to confirm every playlist song is accepted for every included artist.
+ */
+window.SS = window.SS || {};
+
+SS.PLAYLISTS = [
+  {
+    id: "elmoooo",
+    name: "Elmoooo",
+    file: "data/playlists/elmoooo.csv",
+    // Artists from this playlist that are question artists (new or merged).
+    artistIds: [
+      "benson-boone", "alex-warren", "sia", "sabrina-carpenter", "dua-lipa", "shawn-mendes",
+      "billie-eilish", "ed-sheeran", "tate-mcrae", "gracie-abrams", "olivia-rodrigo", "bruno-mars",
+      "chappell-roan", "onerepublic", "taylor-swift", "miley-cyrus", "zara-larsson", "imagine-dragons",
+      "michael-jackson", "doja-cat", "david-guetta", "calvin-harris", "coldplay", "justin-bieber",
+      "katy-perry", "nsync", "noah-kahan", "charlie-puth", "selena-gomez", "post-malone",
+      "the-chainsmokers", "drake", "tame-impala", "twenty-one-pilots", "harry-styles", "rihanna",
+      "the-script", "adele", "abba", "shakira", "lady-gaga", "maroon-5", "glass-animals",
+      "ariana-grande", "eminem"
+    ]
+  }
+];
+
+</script>
+  <script>
+/* js/data/index.js */
+/* Builds lookups once all artist data files have loaded. */
+window.SS = window.SS || {};
+SS.ARTISTS_BY_ID = Object.fromEntries(SS.ARTISTS.map((a) => [a.id, a]));
+
+</script>
+  <script>
+/* js/data/singers.js */
+/*
+ * Singer database for "Guess the Rarest Singer".
+ *
+ * One singer per line:  Name | gender | genres | country | popularity | aliases
+ *   gender:     m, f, or x (non-binary; included in genre/country categories only)
+ *   genres:     comma list of pop, rock, country, rnb, latin (may be empty)
+ *   country:    ISO-style code (us, uk, au, ca, ie, nz, ...)
+ *   popularity: 0-100 estimate of Spotify artist popularity / how readily people
+ *               name them. Tiers are worked out per category from this ranking,
+ *               so every category spans all six tiers.
+ *   aliases:    ; separated alternative names
+ *
+ * Solo singers and band lead singers are included (as people, not band names).
+ * Rappers who don't primarily sing are left out.
+ */
+window.SS = window.SS || {};
+
+SS.SINGERS_RAW = `
+Taylor Swift|f|pop,country|us|100|Taylor;T Swift
+The Weeknd|m|pop,rnb|ca|95|Weeknd;Abel Tesfaye
+Ariana Grande|f|pop,rnb|us|94|Ariana
+Billie Eilish|f|pop|us|93|Billie
+Lady Gaga|f|pop|us|93|Gaga
+Beyoncé|f|rnb,pop|us|93|Beyonce;Queen B
+Rihanna|f|pop,rnb|bb|93|RiRi
+Bruno Mars|m|pop,rnb|us|93
+Drake|m|rnb,pop|ca|92
+Bad Bunny|m|latin|pr|92
+Sabrina Carpenter|f|pop|us|91
+Ed Sheeran|m|pop|uk|90
+Justin Bieber|m|pop|ca|90|Bieber
+Michael Jackson|m|pop,rnb|us|90|MJ
+Dua Lipa|f|pop|uk|90
+Adele|f|pop,rnb|uk|90
+SZA|f|rnb,pop|us|90
+Olivia Rodrigo|f|pop,rock|us|89
+Katy Perry|f|pop|us|88
+Miley Cyrus|f|pop|us|88
+Morgan Wallen|m|country|us|88
+Harry Styles|m|pop|uk|87
+Mariah Carey|f|pop,rnb|us|87|Mariah
+Whitney Houston|f|pop,rnb|us|87|Whitney
+Selena Gomez|f|pop|us|86
+Madonna|f|pop|us|86
+Shakira|f|pop,latin|co|86
+Lana Del Rey|f|pop|us|86
+Benson Boone|m|pop|us|86
+Post Malone|m|pop,country|us|86
+Zach Bryan|m|country|us|86
+Karol G|f|latin|co|86
+Britney Spears|f|pop|us|85|Britney
+Sia|f|pop|au|85
+Chappell Roan|f|pop|us|85
+Doja Cat|f|pop,rnb|us|85
+Chris Brown|m|rnb,pop|us|85
+Elton John|m|pop,rock|uk|85
+Celine Dion|f|pop|ca|84|Céline Dion
+Tate McRae|f|pop|ca|84
+Luke Combs|m|country|us|84
+Alex Warren|m|pop|us|83
+Sam Smith|x|pop,rnb|uk|83
+Gracie Abrams|f|pop|us|82
+Charli XCX|f|pop|uk|82|Charli
+Shawn Mendes|m|pop|ca|82
+P!nk|f|pop,rock|us|82|Pink
+Hozier|m|rock,pop|ie|82
+Teddy Swims|m|pop,rnb|us|82
+Olivia Dean|f|pop,rnb|uk|82
+Feid|m|latin|co|82
+Peso Pluma|m|latin|mx|82
+sombr|m|pop,rock|us|82
+Freddie Mercury|m|rock|uk|80|Freddie
+Christina Aguilera|f|pop,rnb|us|80
+David Bowie|m|rock,pop|uk|80|Bowie
+Elvis Presley|m|rock,pop|us|80|Elvis
+Lewis Capaldi|m|pop|uk|80
+Frank Ocean|m|rnb|us|80
+Usher|m|rnb,pop|us|80
+Chris Stapleton|m|country|us|80
+J Balvin|m|latin|co|80
+Rauw Alejandro|m|latin|pr|80
+Kali Uchis|f|rnb,latin|us|80
+Rosé|f|pop|kr|80|Rose
+Jennie|f|pop|kr|80|Jennie Kim
+Jungkook|m|pop|kr|80|Jung Kook
+Charlie Puth|m|pop|us|79
+Khalid|m|rnb,pop|us|78
+Daniel Caesar|m|rnb|ca|78
+Brent Faiyaz|m|rnb|us|78
+Kehlani|f|rnb|us|78
+Zara Larsson|f|pop|se|78
+Raye|f|rnb,pop|uk|78
+Jelly Roll|m|country,rock|us|78
+Daddy Yankee|m|latin|pr|78
+Maluma|m|latin|co|78
+Rosalía|f|latin,pop|es|78|Rosalia
+Myke Towers|m|latin|pr|78
+Lisa|f|pop|th|78|Lalisa
+Justin Timberlake|m|pop,rnb|us|78
+Dolly Parton|f|country|us|78|Dolly
+Noah Kahan|m|pop|us|78
+Camila Cabello|f|pop,latin|us|77
+Avril Lavigne|f|pop,rock|ca|76
+Kane Brown|m|country|us|76
+Luke Bryan|m|country|us|76
+Jason Aldean|m|country|us|76
+Johnny Cash|m|country|us|76
+Shaboozey|m|country|us|76
+Cody Johnson|m|country|us|76
+Bailey Zimmerman|m|country|us|76
+Kelly Clarkson|f|pop|us|76
+James Arthur|m|pop|uk|76
+George Michael|m|pop|uk|76
+Prince|m|pop,rnb,rock|us|76
+Phil Collins|m|pop,rock|uk|76
+Michael Bublé|m|pop|ca|76|Michael Buble
+John Legend|m|rnb,pop|us|76
+Jhené Aiko|f|rnb|us|76|Jhene Aiko
+Summer Walker|f|rnb|us|76
+Alicia Keys|f|rnb,pop|us|76
+Stevie Wonder|m|rnb,pop|us|76
+John Lennon|m|rock,pop|uk|76
+Paul McCartney|m|rock,pop|uk|76|Macca
+Ozuna|m|latin|pr|76
+Becky G|f|latin,pop|us|76
+The Kid LAROI|m|pop|au|76|Kid Laroi
+Jimin|m|pop|kr|76
+Mitski|f|rock,pop|us|76
+Djo|m|pop,rock|us|76
+Myles Smith|m|pop|uk|76
+Laufey|f|pop|is|76
+Clairo|f|pop|us|76
+PinkPantheress|f|pop|uk|76
+Jennifer Lopez|f|pop,latin|us|76|J.Lo;JLo
+Enrique Iglesias|m|pop,latin|es|74
+Lainey Wilson|f|country|us|74
+Ella Langley|f|country|us|74
+Shania Twain|f|country,pop|ca|74|Shania
+Demi Lovato|x|pop|us|74
+Halsey|f|pop|us|74
+Lorde|f|pop|nz|74
+Kylie Minogue|f|pop|au|74|Kylie
+Conan Gray|m|pop|us|74
+Zayn|m|pop,rnb|uk|74|Zayn Malik
+Jason Derulo|m|pop,rnb|us|74
+Amy Winehouse|f|rnb,pop|uk|74
+Billy Joel|m|rock,pop|us|74
+Bruce Springsteen|m|rock|us|74|Springsteen;The Boss
+George Strait|m|country|us|74
+Blake Shelton|m|country|us|74
+Thomas Rhett|m|country|us|74
+Riley Green|m|country|us|74
+Giveon|m|rnb|us|74
+Miguel|m|rnb|us|74
+Tems|f|rnb|ng|74
+Anitta|f|latin,pop|br|74
+Romeo Santos|m|latin|us|74
+Young Miko|f|latin|pr|74
+Meghan Trainor|f|pop|us|73
+Bebe Rexha|f|pop|us|72
+Melanie Martinez|f|pop|us|72
+Ne-Yo|m|rnb,pop|us|72
+Kenny Chesney|m|country|us|72
+Tim McGraw|m|country|us|72
+Alan Jackson|m|country|us|72
+Lionel Richie|m|pop,rnb|us|72
+Tina Turner|f|rock,rnb,pop|us|72
+Aaliyah|f|rnb|us|72
+Marvin Gaye|m|rnb|us|72
+Ozzy Osbourne|m|rock|uk|72|Ozzy
+Kurt Cobain|m|rock|us|72
+Jon Bon Jovi|m|rock|us|72|Bon Jovi
+Tyler Childers|m|country|us|72
+Lola Young|f|pop|uk|72
+Megan Moroney|f|country|us|72
+Carrie Underwood|f|country|us|72
+Tinashe|f|rnb,pop|us|72
+Bryson Tiller|m|rnb|us|72
+PartyNextDoor|m|rnb|ca|72
+Reneé Rapp|f|pop|us|72|Renee Rapp
+Tyla|f|pop,rnb|za|72
+Beabadoobee|f|pop,rock|uk|72
+Tom Odell|m|pop|uk|72
+Niall Horan|m|pop|ie|72
+Nicky Jam|m|latin|us|72
+Sebastián Yatra|m|latin|co|72|Sebastian Yatra
+Manuel Turizo|m|latin|co|72
+Ava Max|f|pop|us|70
+Anne-Marie|f|pop|uk|70
+Troye Sivan|m|pop|au|70
+Ricky Martin|m|pop,latin|pr|70
+Marc Anthony|m|latin|us|70
+Cher|f|pop|us|70
+Janet Jackson|f|pop,rnb|us|70
+Robbie Williams|m|pop|uk|70
+Willie Nelson|m|country|us|70
+Kacey Musgraves|f|country|us|70
+Keith Urban|m|country|au|70
+Sam Hunt|m|country|us|70
+Jordan Davis|m|country|us|70
+Mick Jagger|m|rock|uk|70
+Rod Stewart|m|rock,pop|uk|70
+Bob Dylan|m|rock|us|70|Dylan
+Chester Bennington|m|rock|us|70
+Lauryn Hill|f|rnb|us|70
+Aretha Franklin|f|rnb|us|70|Aretha
+Frank Sinatra|m|pop|us|70|Sinatra
+Steve Lacy|m|rnb|us|70
+Ruth B.|f|pop|ca|70|Ruth B
+Willow|f|pop,rock|us|70|Willow Smith
+Lizzo|f|pop,rnb|us|70
+Aurora|f|pop|no|70
+Christian Nodal|m|latin|mx|70
+Stephen Sanchez|m|pop|us|70
+Kesha|f|pop|us|68|Ke$ha
+Carly Rae Jepsen|f|pop|ca|68
+Gwen Stefani|f|pop,rock|us|68
+Kelsea Ballerini|f|country|us|68
+Stevie Nicks|f|rock|us|68
+Kate Bush|f|pop,rock|uk|68
+Bryan Adams|m|rock,pop|ca|68
+George Ezra|m|pop|uk|68
+Eric Church|m|country|us|68
+Hardy|m|country|us|68
+Nate Smith|m|country|us|68
+Cameron Whitcomb|m|country|ca|68
+Vance Joy|m|pop|au|68
+Dean Lewis|m|pop|au|68
+Tones and I|f|pop|au|68
+Bill Withers|m|rnb|us|68
+Phoebe Bridgers|f|rock|us|68
+Dasha|f|country|us|68
+Ella Mai|f|rnb|uk|66
+Jorja Smith|f|rnb|uk|66
+Luis Fonsi|m|latin|pr|66
+Prince Royce|m|latin|us|68
+Luis Miguel|m|latin|mx|68
+Tini|f|latin|ar|68
+Mary J. Blige|f|rnb|us|68|Mary J Blige
+Calum Scott|m|pop|uk|66
+Kenny Rogers|m|country|us|66
+John Denver|m|country,pop|us|66
+Toby Keith|m|country|us|66
+Dierks Bentley|m|country|us|66
+Cole Swindell|m|country|us|66
+Warren Zeiders|m|country|us|66
+Miranda Lambert|f|country|us|66
+Maren Morris|f|country,pop|us|66
+Reba McEntire|f|country|us|66|Reba
+Alanis Morissette|f|rock,pop|ca|66|Alanis
+Sam Fender|m|rock|uk|66
+Liam Gallagher|m|rock|uk|66
+Alex Turner|m|rock|uk|66
+Dave Grohl|m|rock|us|66
+Bono|m|rock|ie|66
+Sting|m|rock,pop|uk|66
+Eric Clapton|m|rock|uk|66
+Jimi Hendrix|m|rock|us|66
+Tom Petty|m|rock|us|66
+Nina Simone|f|rnb|us|66
+Erykah Badu|f|rnb|us|65
+Victoria Monét|f|rnb|us|66|Victoria Monet
+Leon Bridges|m|rnb|us|66
+6lack|m|rnb|us|65
+Jeremih|m|rnb|us|66
+Alec Benjamin|m|pop|us|66
+Lauv|m|pop|us|66
+Mark Ambor|m|pop|us|66
+Matt Hansen|m|pop|us|66
+Lil Nas X|m|pop|us|66
+Stromae|m|pop|be|66
+Tove Lo|f|pop|se|66
+Girl in Red|f|pop|no|66
+Jessie J|f|pop|uk|65
+Rita Ora|f|pop|uk|66
+Nick Jonas|m|pop|us|65
+Louis Tomlinson|m|pop|uk|65
+Cyndi Lauper|f|pop|us|65
+Ciara|f|rnb,pop|us|65
+Trey Songz|m|rnb|us|64
+Rag'n'Bone Man|m|pop|uk|64
+Yungblud|m|rock|uk|64
+Adam Levine|m|pop,rock|us|64
+Lenny Kravitz|m|rock|us|64
+Neil Young|m|rock|ca|64
+Chris Martin|m|rock,pop|uk|64
+Steven Tyler|m|rock|us|64
+Darius Rucker|m|country,rock|us|64
+Brad Paisley|m|country|us|64
+Russell Dickerson|m|country|us|64
+Chris Young|m|country|us|64
+Gabby Barrett|f|country|us|64
+Al Green|m|rnb|us|64
+Otis Redding|m|rnb|us|64
+Ray Charles|m|rnb|us|64
+Vicente Fernández|m|latin|mx|64|Vicente Fernandez
+Natti Natasha|f|latin|do|64
+Sheryl Crow|f|rock,pop|us|62
+Joan Jett|f|rock|us|62
+Janis Joplin|f|rock|us|62
+Etta James|f|rnb|us|62
+Toni Braxton|f|rnb|us|62
+Brandy|f|rnb|us|62
+Ashanti|f|rnb|us|62
+Muni Long|f|rnb|us|62
+Ari Lennox|f|rnb|us|62
+Lucky Daye|m|rnb|us|62
+Sam Cooke|m|rnb|us|62
+Barry White|m|rnb|us|62
+Fergie|f|pop|us|62
+Hailee Steinfeld|f|pop|us|62
+Olivia Newton-John|f|pop,country|au|62|ONJ
+Faith Hill|f|country|us|62
+Brandi Carlile|f|country,rock|us|62
+Jess Glynne|f|pop|uk|62
+Birdy|f|pop|uk|62
+Ella Henderson|f|pop|uk|62
+Dido|f|pop|uk|58
+Enya|f|pop|ie|62
+Nelly Furtado|f|pop|ca|62
+Alessia Cara|f|pop|ca|62
+Noah Cyrus|f|pop|us|62
+Natasha Bedingfield|f|pop|uk|62
+Norah Jones|f|pop|us|62
+Ella Fitzgerald|f|pop|us|62
+Rex Orange County|m|pop|uk|62
+Rick Astley|m|pop|uk|62
+Neil Diamond|m|pop,rock|us|62
+Leonard Cohen|m|rock|ca|62
+Jim Morrison|m|rock|us|62
+Eddie Vedder|m|rock|us|62
+Robert Plant|m|rock|uk|62
+Juanes|m|latin|co|62
+Carlos Vives|m|latin|co|62
+Selena Quintanilla|f|latin|us|62
+Thalía|f|latin,pop|mx|62|Thalia
+Juan Gabriel|m|latin|mx|62
+Alejandro Sanz|m|latin|es|62
+Danna|f|latin|mx|62|Danna Paola
+Jake Owen|m|country|us|62
+Lee Brice|m|country|us|62
+Walker Hayes|m|country|us|62
+Colter Wall|m|country|ca|62
+Cat Stevens|m|pop|uk|62|Yusuf
+Billy Idol|m|rock|uk|60
+Bonnie Tyler|f|rock,pop|uk|60
+Pat Benatar|f|rock|us|60
+Hayley Williams|f|rock|us|60
+Florence Welch|f|rock,pop|uk|60|Florence
+Becky Hill|f|pop|uk|60
+Maisie Peters|f|pop|uk|60
+Carly Pearce|f|country|us|60
+LeAnn Rimes|f|country,pop|us|60
+Patsy Cline|f|country|us|60
+Chaka Khan|f|rnb|us|60
+D'Angelo|m|rnb|us|60
+Ginuwine|m|rnb|us|60
+Josh Turner|m|country|us|60
+Oliver Anthony|m|country|us|60
+Joe Jonas|m|pop|us|60
+Adam Lambert|m|pop,rock|us|60
+Liam Payne|m|pop|uk|60
+Tom Jones|m|pop|uk|60
+Dean Martin|m|pop|us|60
+Nat King Cole|m|pop,rnb|us|60
+Waylon Jennings|m|country|us|60
+Meat Loaf|m|rock|us|60
+Morrissey|m|rock|uk|60
+Robert Smith|m|rock|uk|60
+Thom Yorke|m|rock|uk|60
+Brendon Urie|m|rock,pop|us|60
+Noel Gallagher|m|rock|uk|60
+Jeremy Zucker|m|pop|us|60
+Mon Laferte|f|latin|cl|56
+Merle Haggard|m|country|us|58
+Billy Ray Cyrus|m|country|us|58
+Randy Travis|m|country|us|58
+Trace Adkins|m|country|us|58
+Chase Rice|m|country|us|58
+Loretta Lynn|f|country|us|58
+Linda Ronstadt|f|rock,country|us|58
+Joni Mitchell|f|pop,rock|ca|58
+Grimes|f|pop|ca|58
+Jessie Reyez|f|rnb|ca|58
+Leona Lewis|f|pop|uk|58
+Lily Allen|f|pop|uk|58
+Annie Lennox|f|pop|uk|58
+Sophie Ellis-Bextor|f|pop|uk|58
+Robyn|f|pop|se|58
+Björk|f|pop|is|58|Bjork
+Snoh Aalegra|f|rnb|se|58
+Monica|f|rnb|us|58
+Seal|m|pop,rnb|uk|58
+Olly Murs|m|pop|uk|58
+Josh Groban|m|pop|us|58
+Van Morrison|m|rock|uk|58
+Chris Cornell|m|rock|us|58
+Brandon Flowers|m|rock|us|58
+Billie Joe Armstrong|m|rock|us|58
+Dan Reynolds|m|rock,pop|us|58
+Bon Scott|m|rock|au|58
+Natalia Lafourcade|f|latin|mx|58
+Gloria Estefan|f|latin,pop|us|58
+Nathy Peluso|f|latin|ar|58
+Mario|m|rnb|us|56
+Omarion|m|rnb|us|56
+Maxwell|m|rnb|us|56
+Ashley McBryde|f|country|us|56
+Martina McBride|f|country|us|56
+Sierra Ferrell|f|country|us|56
+Hank Williams|m|country|us|56
+Glen Campbell|m|country|us|56
+Travis Tritt|m|country|us|56
+Vince Gill|m|country|us|56
+Celia Cruz|f|latin|cu|56
+Julio Iglesias|m|latin,pop|es|56
+Pablo Alborán|m|latin|es|56|Pablo Alboran
+Bing Crosby|m|pop|us|56
+Tony Bennett|m|pop|us|56
+Carole King|f|pop|us|56
+Diana Ross|f|rnb,pop|us|66
+Emeli Sandé|f|pop,rnb|uk|56|Emeli Sande
+Sinéad O'Connor|f|pop,rock|ie|56|Sinead O'Connor
+Amy Lee|f|rock|us|56
+Gotye|m|pop|au|56
+Guy Sebastian|m|pop|au|56
+Ruel|m|pop|au|56
+Kevin Parker|m|rock|au|56
+Benee|f|pop|nz|56
+Sigrid|f|pop|no|56
+Craig David|m|rnb,pop|uk|56
+Chuck Berry|m|rock|us|56
+Lou Reed|m|rock|us|56
+Iggy Pop|m|rock|us|56
+Mark Knopfler|m|rock|uk|56
+Peter Gabriel|m|rock|uk|56
+James Hetfield|m|rock|us|56
+Jack White|m|rock|us|56
+Damon Albarn|m|rock|uk|56
+Anthony Kiedis|m|rock|us|56
+Joe Cocker|m|rock|uk|56
+Brian Johnson|m|rock|uk|56
+Sturgill Simpson|m|country|us|60
+Jason Isbell|m|country|us|60
+Gladys Knight|f|rnb|us|55
+Patti LaBelle|f|rnb|us|55
+Anita Baker|f|rnb|us|55
+Mahalia|f|rnb|uk|52
+Paloma Faith|f|pop|uk|52
+Joss Stone|f|rnb|uk|52
+Freya Ridings|f|pop|uk|52
+Holly Humberstone|f|pop|uk|52
+Griff|f|pop|uk|52
+Lykke Li|f|pop|se|52
+Jessie Ware|f|pop|uk|52
+Sarah McLachlan|f|pop|ca|52
+Delta Goodrem|f|pop|au|52
+Tammy Wynette|f|country|us|52
+Trisha Yearwood|f|country|us|52
+Lee Ann Womack|f|country|us|52
+Sara Evans|f|country|us|52
+Gretchen Wilson|f|country|us|52
+Debbie Harry|f|rock|us|52
+Dolores O'Riordan|f|rock|ie|52
+Paula Abdul|f|pop|us|50
+Brian McKnight|m|rnb|us|52
+Babyface|m|rnb|us|52
+Tank|m|rnb|us|52
+Kenny Loggins|m|pop,rock|us|52
+Roger Daltrey|m|rock|uk|52
+Gerard Way|m|rock|us|52
+Chad Kroeger|m|rock|ca|52
+Rob Thomas|m|rock,pop|us|52
+Darren Hayes|m|pop|au|50
+John Farnham|m|pop,rock|au|52|Farnsie
+Mika|m|pop|uk|50
+Cliff Richard|m|pop|uk|50
+Barry Manilow|m|pop|us|50
+Buddy Holly|m|rock|us|50
+Lemmy|m|rock|uk|50|Lemmy Kilmister
+Matt Bellamy|m|rock|uk|50
+Corey Taylor|m|rock|us|50
+Caleb Followill|m|rock|us|50
+Jimmy Barnes|m|rock|au|50|Barnesy
+Michael Hutchence|m|rock|au|50
+Morgan Evans|m|country|au|50
+Duffy|f|pop|uk|50
+Dodie|f|pop|uk|50
+Astrid S|f|pop|no|50
+Natalie Imbruglia|f|pop|au|50
+Amy Shark|f|pop|au|50
+Anne Murray|f|country,pop|ca|50
+Charlotte Cardin|f|pop|ca|50
+Lauren Alaina|f|country|us|50
+Patti Smith|f|rock|us|50
+Lucy Dacus|f|rock|us|50
+Little Richard|m|rock|us|52
+Shirley Bassey|f|pop|uk|48
+Chrissie Hynde|f|rock|us|48
+Karen O|f|rock|us|48
+Margo Price|f|country|us|48
+Hailey Whitters|f|country|us|48
+Julian Casablancas|m|rock|us|48
+Serj Tankian|m|rock|us|48
+Bruce Dickinson|m|rock|uk|48
+Rick Springfield|m|rock|au|48
+Gordon Lightfoot|m|country,rock|ca|48
+Charley Pride|m|country|us|48
+G Flip|x|pop,rock|au|48
+Melissa Etheridge|f|rock|us|46
+Courtney Love|f|rock|us|46
+Grace Slick|f|rock|us|46
+Ann Wilson|f|rock|us|46
+Julien Baker|f|rock|us|46
+Feist|f|pop|ca|46
+Kasey Chambers|f|country|au|46
+Courtney Barnett|f|rock|au|46
+Jessica Mauboy|f|pop,rnb|au|46
+Jo Dee Messina|f|country|us|46
+Danielle Bradbery|f|country|us|46
+Tanya Tucker|f|country|us|46
+PJ Harvey|f|rock|uk|46
+Cody Simpson|m|pop|au|46
+Paul Kelly|m|rock|au|46
+Patrick Stump|m|rock|us|46
+Layne Staley|m|rock|us|46
+Ronnie James Dio|m|rock|us|46|Dio
+Richard Ashcroft|m|rock|uk|46
+Missy Higgins|f|pop|au|44
+Tina Arena|f|pop|au|44
+Wynonna Judd|f|country|us|44|Wynonna
+Deana Carter|f|country|us|44
+Mickey Guyton|f|country|us|44
+Shirley Manson|f|rock|uk|44
+Siouxsie Sioux|f|rock|uk|44
+Daryl Braithwaite|m|rock|au|44
+Joe Strummer|m|rock|uk|44
+Johnny Rotten|m|rock|uk|44|John Lydon
+Paul Weller|m|rock|uk|44
+Scott Weiland|m|rock|us|44
+Dannii Minogue|f|pop|au|42
+Suzi Quatro|f|rock|us|42
+Taylor Momsen|f|rock|us|42
+Terri Clark|f|country|us|42
+Crystal Gayle|f|country|us|42
+Jennifer Nettles|f|country|us|42
+June Carter Cash|f|country|us|42
+k.d. lang|f|pop,country|ca|42|kd lang
+Cheryl|f|pop|uk|42|Cheryl Cole
+Conrad Sewell|m|pop|au|42
+Scott Stapp|m|rock|us|42
+Gavin Rossdale|m|rock|uk|42
+Ian Curtis|m|rock|uk|42
+Slim Dusty|m|country|au|40
+Daniel Johns|m|rock|au|40
+Jarvis Cocker|m|rock|uk|40
+Chrissy Amphlett|f|rock|au|40
+Mallrat|f|pop|au|40
+Lenka|f|pop|au|40
+Kimbra|f|pop|nz|40
+Amy Taylor|f|rock|au|40
+Lee Kernaghan|m|country|au|38
+Lzzy Hale|f|rock|us|38
+Liz Phair|f|rock|us|38
+Lita Ford|f|rock|us|38
+Thelma Plum|f|pop|au|38
+Vanessa Amorosi|f|pop|au|36
+Kate Miller-Heidke|f|pop|au|36
+Gabriella Cilmi|f|pop|au|36
+Shannon Noll|m|rock,pop|au|36
+Dami Im|f|pop|au|34
+Ricki-Lee|f|pop|au|34|Ricki-Lee Coulter
+Ian Moss|m|rock|au|32
+Marcia Hines|f|pop,rnb|au|32
+Brody Dalle|f|rock|au|30
+Anthony Callea|m|pop|au|30
+Gurrumul|m|pop|au|30|Geoffrey Gurrumul Yunupingu
+Christine Anu|f|pop|au|28
+Kate Ceberano|f|pop|au|28
+Archie Roach|m||au|28
+Wendy Matthews|f|pop|au|26
+`;
+
+</script>
+  <script>
+/* js/scoring.js */
+/* Rarity/scoring engine: maps a rarity tier (0 = most common, 5 = rarest) to points. */
+window.SS = window.SS || {};
+
+SS.scoring = {
+  TIERS: [
+    { id: "elmo",    name: "Elmo",    word: "Awful",       points: 10 },
+    { id: "monster", name: "Monster", word: "Meh",         points: 15 },
+    { id: "noodle",  name: "Noodle",  word: "Normal",      points: 30 },
+    { id: "grouchy", name: "Grouchy", word: "Great",       points: 60 },
+    { id: "abby",    name: "Abby",    word: "Awesome",     points: 85 },
+    { id: "snuffy",  name: "Snuffy",  word: "Spectacular", points: 100 }
+  ],
+  MAX_POINTS: 100,
+
+  score(tierIndex) {
+    const tier = this.TIERS[tierIndex];
+    return { tier, points: tier.points };
+  },
+
+  /** 0..1 — how far the background sinks for a given score. */
+  depthFraction(points) {
+    return Math.max(0, Math.min(1, points / this.MAX_POINTS));
+  }
+};
+
+</script>
+  <script>
+/* js/validation.js */
+/*
+ * Answer validation: decides whether typed text is a song by the given artist.
+ * Knows nothing about scoring — it returns the matched song and its tier index.
+ */
+window.SS = window.SS || {};
+
+(function () {
+  function normalize(text) {
+    return String(text)
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/['’‘`]/g, "")
+      .replace(/[^a-z0-9 ]+/g, " ")
+      .trim()
+      .replace(/^(the|a|an) /, "")
+      .replace(/\s+/g, "");
+  }
+
+  // Keys a title can be matched by: full title, title without "(...)",
+  // and the bracketed part itself when it is a substantial phrase.
+  function keysForTitle(title) {
+    const keys = new Set([normalize(title)]);
+    const stripped = title.replace(/\([^)]*\)/g, " ").trim();
+    if (stripped) keys.add(normalize(stripped));
+    const inner = (title.match(/\(([^)]*)\)/g) || []).map((m) => normalize(m.slice(1, -1)));
+    inner.filter((k) => k.length >= 8).forEach((k) => keys.add(k));
+    keys.delete("");
+    return [...keys];
+  }
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      let diag = prev[0];
+      prev[0] = i;
+      for (let j = 1; j <= b.length; j++) {
+        const tmp = prev[j];
+        prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+        diag = tmp;
+      }
+    }
+    return prev[b.length];
+  }
+
+  // Allowed typos grow with answer length; short titles must be exact.
+  function allowedTypos(len) {
+    if (len <= 4) return 0;
+    if (len <= 8) return 1;
+    return 2;
+  }
+
+  /** items: [{ title, tier, aliases? }] -> searchable entries */
+  function buildIndex(items) {
+    const entries = [];
+    items.forEach((item) => {
+      [item.title, ...(item.aliases || [])].forEach((name) =>
+        keysForTitle(name).forEach((key) => entries.push({ key, item })));
+    });
+    return entries;
+  }
+
+  /** Returns the matched item, or null. Exact key first, then closest typo match. */
+  function matchIndex(entries, input) {
+    const key = normalize(input);
+    if (key.length < 1) return null;
+    const exact = entries.find((e) => e.key === key);
+    if (exact) return exact.item;
+    let best = null;
+    for (const e of entries) {
+      const limit = allowedTypos(Math.min(e.key.length, key.length));
+      if (limit === 0 || Math.abs(e.key.length - key.length) > limit) continue;
+      const d = levenshtein(key, e.key);
+      if (d <= limit && (!best || d < best.d)) best = { d, e };
+    }
+    return best ? best.e.item : null;
+  }
+
+  const songIndexCache = {};
+  function songIndex(artistId) {
+    if (songIndexCache[artistId]) return songIndexCache[artistId];
+    const artist = SS.ARTISTS_BY_ID[artistId];
+    const items = [];
+    artist.tiers.forEach((songs, tier) =>
+      songs.forEach((title) => items.push({ title, tier, aliases: (artist.aliases || {})[title] || [] })));
+    return (songIndexCache[artistId] = buildIndex(items));
+  }
+
+  SS.validation = {
+    normalize,
+    buildIndex,
+    matchIndex,
+    /** Song mode: returns { title, tier } or null if not a known song by the artist. */
+    match(artistId, input) {
+      const item = matchIndex(songIndex(artistId), input);
+      return item ? { title: item.title, tier: item.tier } : null;
+    }
+  };
+})();
+
+</script>
+  <script>
+/* js/singers.js */
+/*
+ * Singer categories for "Guess the Rarest Singer".
+ * Parses SS.SINGERS_RAW, defines the prompts, and assigns each singer a tier
+ * per category by popularity rank within that category.
+ */
+window.SS = window.SS || {};
+
+(function () {
+  const singers = SS.SINGERS_RAW.trim().split("\n").map((line) => {
+    const [name, gender, genres, country, pop, aliases] = line.split("|").map((s) => (s || "").trim());
+    return {
+      name, gender, country,
+      genres: genres ? genres.split(",").map((g) => g.trim()) : [],
+      popularity: Number(pop) || 0,
+      aliases: aliases ? aliases.split(";").map((a) => a.trim()).filter(Boolean) : []
+    };
+  });
+
+  const G = { m: "male", f: "female" };
+  // Rock and Latin are tagged in the data but not asked as categories.
+  const GENRE = { pop: "pop", country: "country", rnb: "R&B" };
+  const COUNTRY = { au: "Australian", uk: "British", ca: "Canadian" };
+
+  // Category definitions: [id, label, filter]
+  const defs = [["singer", "singer", () => true]];
+  Object.entries(G).forEach(([g, word]) => defs.push([`${word}`, `${word} singer`, (s) => s.gender === g]));
+  Object.entries(GENRE).forEach(([genre, word]) => {
+    defs.push([genre, `${word} singer`, (s) => s.genres.includes(genre)]);
+    Object.entries(G).forEach(([g, gw]) =>
+      defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
+  });
+  Object.entries(COUNTRY).forEach(([c, word]) => defs.push([c, `${word} singer`, (s) => s.country === c]));
+
+  // Share of a category (by popularity rank) in each tier: lots common, few rare.
+  const CUTS = [0.25, 0.45, 0.65, 0.82, 0.94, 1];
+  const MIN_SINGERS = 15;
+
+  const categories = defs.map(([id, label, filter]) => {
+    const members = singers.filter(filter).sort((a, b) => b.popularity - a.popularity);
+    const items = members.map((s, i) => ({
+      title: s.name,
+      aliases: s.aliases,
+      tier: CUTS.findIndex((c) => (i + 1) / members.length <= c + 1e-9)
+    }));
+    return { id, label, article: /^([aeiou]|r&b)/i.test(label) ? "an" : "a", items, index: SS.validation.buildIndex(items) };
+  }).filter((c) => c.items.length >= MIN_SINGERS);
+
+  const allIndex = SS.validation.buildIndex(singers.map((s) => ({ title: s.name, aliases: s.aliases })));
+  const byId = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+  SS.singers = {
+    list: singers,
+    CATEGORIES: categories,
+    category: (id) => byId[id],
+
+    /** { status: "ok", title, tier } | { status: "wrong-category", title } | { status: "unknown" } */
+    match(categoryId, input) {
+      const hit = SS.validation.matchIndex(byId[categoryId].index, input);
+      if (hit) return { status: "ok", title: hit.title, tier: hit.tier };
+      const known = SS.validation.matchIndex(allIndex, input);
+      return known ? { status: "wrong-category", title: known.title } : { status: "unknown" };
+    },
+
+    rarestExample(categoryId) {
+      const rare = byId[categoryId].items.filter((i) => i.tier === 5);
+      return rare[Math.floor(Math.random() * rare.length)].title;
+    }
+  };
+})();
+
+</script>
+  <script>
+/* js/modes.js */
+/*
+ * Game modes. Each mode supplies its questions, prompt text and answer checking;
+ * the engine, scoring and UI are shared.
+ */
+window.SS = window.SS || {};
+
+(function () {
+  function shuffle(list) {
+    const a = list.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  SS.modes = {
+    song: {
+      id: "song",
+      name: "Guess the Rarest Song",
+      hudWord: "Song",
+      placeholder: "Type a song title…",
+      pickQuestions: (n) => shuffle(SS.ARTISTS.map((a) => a.id)).slice(0, n),
+      prompt: (q) => ({ label: "Name a song by", heading: SS.ARTISTS_BY_ID[q].name }),
+      check(q, input) {
+        const m = SS.validation.match(q, input);
+        if (m) return { status: "ok", title: m.title, tier: m.tier };
+        return { status: "invalid", message: `We don't know "${input}" as a song by ${SS.ARTISTS_BY_ID[q].name}. Try another!` };
+      },
+      rarestExample(q) {
+        const rare = SS.ARTISTS_BY_ID[q].tiers[5];
+        return rare[Math.floor(Math.random() * rare.length)];
+      }
+    },
+
+    singer: {
+      id: "singer",
+      name: "Guess the Rarest Singer",
+      hudWord: "Singer",
+      placeholder: "Type a singer's name…",
+      pickQuestions: (n) => shuffle(SS.singers.CATEGORIES.map((c) => c.id)).slice(0, n),
+      prompt(q) {
+        const c = SS.singers.category(q);
+        const heading = c.label.charAt(0).toUpperCase() + c.label.slice(1);
+        return { label: `Name ${c.article}`, heading };
+      },
+      check(q, input) {
+        const m = SS.singers.match(q, input);
+        if (m.status === "ok") return m;
+        const label = SS.singers.category(q).label;
+        const message = m.status === "wrong-category"
+          ? `${m.title} doesn't count as ${SS.singers.category(q).article} ${label}. Try another!`
+          : `We don't know "${input}" as ${SS.singers.category(q).article} ${label}. Try another!`;
+        return { status: "invalid", message };
+      },
+      rarestExample: (q) => SS.singers.rarestExample(q)
+    }
+  };
+})();
+
+</script>
+  <script>
+/* js/storage.js */
+/* Player profile & progress persistence (localStorage). */
+window.SS = window.SS || {};
+
+(function () {
+  const KEY = "snuffleupagus-songs.v1";
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(data) {
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* storage unavailable */ }
+  }
+  function today() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  }
+
+  SS.storage = {
+    getStats() {
+      const s = load().stats || {};
+      const isToday = s.day === today();
+      return {
+        totalPoints: s.totalPoints || 0,
+        roundsPlayed: s.roundsPlayed || 0,
+        bestScore: s.bestScore || 0,
+        roundsToday: isToday ? s.roundsToday || 0 : 0,
+        bestToday: isToday ? s.bestToday || 0 : 0,
+        day: today()
+      };
+    },
+
+    /** Records a finished round, clears the in-progress round, returns updated stats. */
+    recordRound(score) {
+      const data = load();
+      const s = this.getStats();
+      s.totalPoints += score;
+      s.roundsPlayed += 1;
+      s.bestScore = Math.max(s.bestScore, score);
+      s.roundsToday += 1;
+      s.bestToday = Math.max(s.bestToday, score);
+      data.stats = s;
+      delete data.current;
+      save(data);
+      return s;
+    },
+
+    saveRound(round) { const d = load(); d.current = round; save(d); },
+    loadRound() {
+      const r = load().current;
+      return r && r.mode && SS.modes[r.mode] ? r : null; // ignore rounds saved by older versions
+    },
+    clearRound() { const d = load(); delete d.current; save(d); }
+  };
+})();
+
+</script>
+  <script>
+/* js/engine.js */
+/*
+ * Game engine: round state machine. Pure state — no DOM, no storage.
+ * Phases: "question" -> "feedback" -> (next) "question" ... -> "done"
+ * Mode-specific behaviour (questions, prompts, answer checking) lives in modes.js.
+ */
+window.SS = window.SS || {};
+
+SS.engine = {
+  QUESTIONS_PER_ROUND: 7,
+  TIME_LIMIT_MS: 25000,
+
+  newRound(modeId) {
+    return {
+      mode: modeId,
+      questions: SS.modes[modeId].pickQuestions(this.QUESTIONS_PER_ROUND),
+      index: 0,
+      answers: [],
+      phase: "question"
+    };
+  },
+
+  mode(round) { return SS.modes[round.mode]; },
+  currentQuestion(round) { return round.questions[round.index]; },
+  prompt(round, q) { return this.mode(round).prompt(q); },
+
+  /** Returns { status: "invalid", message } (player may try again) or { status: "scored", answer }. */
+  submit(round, text) {
+    if (round.phase !== "question") return null;
+    const q = this.currentQuestion(round);
+    const result = this.mode(round).check(q, text);
+    if (result.status !== "ok") return { status: "invalid", message: result.message };
+    const { points } = SS.scoring.score(result.tier);
+    const answer = { q, input: text, answer: result.title, tierIndex: result.tier, points };
+    round.answers.push(answer);
+    round.phase = "feedback";
+    return { status: "scored", answer };
+  },
+
+  timeout(round) {
+    if (round.phase !== "question") return null;
+    const answer = { q: this.currentQuestion(round), input: null, answer: null, tierIndex: null, points: 0, timedOut: true };
+    round.answers.push(answer);
+    round.phase = "feedback";
+    return answer;
+  },
+
+  next(round) {
+    if (round.phase !== "feedback") return;
+    round.index += 1;
+    round.phase = round.index >= this.QUESTIONS_PER_ROUND ? "done" : "question";
+  },
+
+  total(round) { return round.answers.reduce((sum, a) => sum + a.points, 0); },
+  maxTotal() { return this.QUESTIONS_PER_ROUND * SS.scoring.MAX_POINTS; },
+  rarestExample(round, q) { return this.mode(round).rarestExample(q); }
+};
+
+</script>
+  <script>
+/* js/ui.js */
+/* UI controller: wires DOM to the engine, scoring, validation and storage modules. */
+(function () {
+  const { engine, scoring, storage } = SS;
+  const $ = (id) => document.getElementById(id);
+
+  const screens = { home: $("screen-home"), game: $("screen-game"), results: $("screen-results") };
+  const ocean = $("ocean");
+  const RING_LENGTH = 119.38; // 2πr for r = 19
+
+  let round = null;
+  let deadline = 0;
+  let timerId = null;
+
+  // ---------- helpers ----------
+  function show(name) {
+    Object.entries(screens).forEach(([key, el]) => {
+      el.hidden = key !== name;
+      if (key === name) { el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); }
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast.id);
+    toast.id = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  function tierBadge(tierIndex, small) {
+    const el = document.createElement("span");
+    if (tierIndex == null) {
+      el.className = `tier-badge tmiss${small ? " sm" : ""}`;
+      el.innerHTML = `<span class="tier-name">No answer</span>`;
+      return el;
+    }
+    const tier = scoring.TIERS[tierIndex];
+    el.className = `tier-badge t${tierIndex}${small ? " sm" : ""}`;
+    el.innerHTML = `<span class="tier-name">${tier.name}</span><span class="tier-word">${tier.word}</span>`;
+    return el;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ---------- ocean ----------
+  function sink(points) {
+    ocean.classList.remove("rising");
+    ocean.style.transform = `translate3d(0, ${-80 * scoring.depthFraction(points)}%, 0)`;
+    spawnBubbles(Math.round(4 + points / 6));
+  }
+
+  // Home: squash the whole gradient into one screen (light top -> deep blue bottom).
+  function homeBackdrop() {
+    ocean.classList.add("rising");
+    ocean.style.transform = "translate3d(0, 0, 0) scaleY(0.233)";
+  }
+
+  function surface() {
+    ocean.classList.add("rising");
+    ocean.style.transform = "translate3d(0, 0, 0)";
+  }
+
+  function spawnBubbles(count) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const layer = $("bubbles");
+    for (let i = 0; i < count; i++) {
+      const b = document.createElement("span");
+      const size = 6 + Math.random() * 18;
+      b.className = "bubble";
+      b.style.width = b.style.height = `${size}px`;
+      b.style.left = `${Math.random() * 100}%`;
+      b.style.setProperty("--drift", `${(Math.random() - 0.5) * 80}px`);
+      b.style.animationDuration = `${2.2 + Math.random() * 2.5}s`;
+      b.style.animationDelay = `${Math.random() * 0.8}s`;
+      b.addEventListener("animationend", () => b.remove());
+      layer.appendChild(b);
+    }
+  }
+
+  // ---------- home ----------
+  function renderHome() {
+    const stats = storage.getStats();
+    document.querySelectorAll("[data-stat]").forEach((el) => {
+      el.textContent = stats[el.dataset.stat].toLocaleString();
+    });
+    $("btn-resume").hidden = !storage.loadRound();
+    homeBackdrop();
+    show("home");
+  }
+
+  function renderTierLegend() {
+    const list = $("tier-list");
+    scoring.TIERS.slice().reverse().forEach((tier, i) => {
+      const li = document.createElement("li");
+      li.appendChild(tierBadge(scoring.TIERS.length - 1 - i, true));
+      li.insertAdjacentHTML("beforeend", `<span class="pts">${tier.points} pts</span>`);
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- game ----------
+  function startRound(modeId, existing) {
+    round = existing || engine.newRound(modeId);
+    $("answer-input").placeholder = engine.mode(round).placeholder;
+    storage.saveRound(round);
+    show("game");
+    if (round.phase === "feedback") renderFeedback(round.answers[round.answers.length - 1], false);
+    else renderQuestion();
+  }
+
+  function renderHud() {
+    $("hud-question").textContent = `${engine.mode(round).hudWord} ${Math.min(round.index + 1, engine.QUESTIONS_PER_ROUND)} / ${engine.QUESTIONS_PER_ROUND}`;
+    $("hud-score").textContent = `${engine.total(round)} pts`;
+    const prog = $("progress");
+    prog.innerHTML = "";
+    for (let i = 0; i < engine.QUESTIONS_PER_ROUND; i++) {
+      const s = document.createElement("span");
+      if (i < round.answers.length) s.className = "done";
+      else if (i === round.index) s.className = "current";
+      prog.appendChild(s);
+    }
+  }
+
+  function renderQuestion() {
+    surface();
+    renderPrompt(engine.currentQuestion(round));
+    $("answer-form").hidden = false;
+    $("feedback").hidden = true;
+    $("answer-error").textContent = "";
+    const input = $("answer-input");
+    input.value = "";
+    input.disabled = false;
+    renderHud();
+    input.focus();
+    startTimer();
+  }
+
+  function renderPrompt(q) {
+    const p = engine.prompt(round, q);
+    $("prompt-label").textContent = p.label;
+    $("artist-name").textContent = p.heading;
+  }
+
+  function startTimer() {
+    stopTimer();
+    deadline = Date.now() + engine.TIME_LIMIT_MS;
+    tick();
+    timerId = setInterval(tick, 100);
+  }
+
+  function stopTimer() {
+    clearInterval(timerId);
+    timerId = null;
+  }
+
+  function tick() {
+    const remaining = Math.max(0, deadline - Date.now());
+    const secs = Math.ceil(remaining / 1000);
+    $("timer-text").textContent = secs;
+    $("timer-ring").style.strokeDashoffset = RING_LENGTH * (1 - remaining / engine.TIME_LIMIT_MS);
+    $("timer").classList.toggle("low", remaining <= 5000);
+    if (remaining <= 0) {
+      stopTimer();
+      const answer = engine.timeout(round);
+      if (answer) { storage.saveRound(round); renderFeedback(answer, true); }
+    }
+  }
+
+  function onSubmit(e) {
+    if (e) e.preventDefault();
+    if (!round || round.phase !== "question") return;
+    const input = $("answer-input");
+    const text = input.value.trim();
+    if (!text) return;
+    const result = engine.submit(round, text);
+    if (result.status === "invalid") {
+      $("answer-error").textContent = result.message;
+      const form = $("answer-form");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      input.select();
+      return;
+    }
+    stopTimer();
+    storage.saveRound(round);
+    renderFeedback(result.answer, true);
+  }
+
+  function renderFeedback(answer, animate) {
+    stopTimer();
+    $("answer-form").hidden = true;
+    $("answer-error").textContent = "";
+    $("feedback").hidden = false;
+    renderPrompt(answer.q);
+    renderHud();
+
+    const badge = $("fb-badge");
+    badge.replaceWith(Object.assign(tierBadge(answer.tierIndex), { id: "fb-badge" }));
+
+    if (answer.timedOut) {
+      $("fb-answer").innerHTML = "Time's up!";
+    } else {
+      $("fb-answer").innerHTML = `You said <strong>${escapeHtml(answer.answer)}</strong>`;
+    }
+    $("fb-rare").textContent = answer.tierIndex === 5 ? "Nobody saw that one coming."
+      : `A Snuffy answer: ${engine.rarestExample(round, answer.q)}`;
+
+    countUp($("fb-points"), answer.points, animate ? 900 : 0);
+    if (animate) sink(answer.points);
+    else { ocean.classList.add("rising"); ocean.style.transform = `translate3d(0, ${-80 * scoring.depthFraction(answer.points)}%, 0)`; }
+
+    const isLast = round.index + 1 >= engine.QUESTIONS_PER_ROUND;
+    const next = $("btn-next");
+    next.textContent = isLast ? "See results" : "Next";
+    next.focus({ preventScroll: true });
+  }
+
+  function countUp(el, target, duration) {
+    if (!duration) { el.textContent = `+${target}`; return; }
+    const start = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      el.textContent = `+${Math.round(target * (1 - Math.pow(1 - p, 3)))}`;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  function onNext() {
+    if (!round || round.phase !== "feedback") return;
+    engine.next(round);
+    if (round.phase === "done") return finishRound();
+    storage.saveRound(round);
+    renderQuestion();
+  }
+
+  // ---------- results ----------
+  function finishRound() {
+    stopTimer();
+    surface();
+    const total = engine.total(round);
+    storage.recordRound(total);
+
+    $("final-score").textContent = total;
+    $("final-score").nextElementSibling.textContent = ` / ${engine.maxTotal()}`;
+    const best = round.answers.reduce((a, b) => (b.points > a.points ? b : a));
+    $("final-note").textContent = best.points
+      ? `Deepest answer: ${best.answer} (${best.points} pts)`
+      : "No answers this time. Dive back in!";
+
+    const list = $("result-list");
+    list.innerHTML = "";
+    round.answers.forEach((a, i) => {
+      const li = document.createElement("li");
+      li.style.animationDelay = `${i * 70}ms`;
+      li.innerHTML = `
+        <span class="r-artist">${escapeHtml(engine.prompt(round, a.q).heading)}</span>
+        <span class="r-song${a.answer ? "" : " miss"}">${a.answer ? escapeHtml(a.answer) : "Time ran out"}</span>
+        <span class="r-right"><span class="r-points">${a.points}</span></span>`;
+      li.querySelector(".r-right").appendChild(tierBadge(a.tierIndex, true));
+      list.appendChild(li);
+    });
+    show("results");
+    $("btn-again").focus({ preventScroll: true });
+  }
+
+  function shareText() {
+    const lines = round.answers.map((a, i) => {
+      const tier = a.tierIndex == null ? "—" : scoring.TIERS[a.tierIndex].name;
+      return `${i + 1}. ${engine.prompt(round, a.q).heading}: ${tier} (${a.points})`;
+    });
+    return `Snuffleupagus Songs (${engine.mode(round).name}): ${engine.total(round)}/${engine.maxTotal()}\n${lines.join("\n")}`;
+  }
+
+  async function onShare() {
+    try {
+      await navigator.clipboard.writeText(shareText());
+      toast("Results copied!");
+    } catch (e) {
+      toast("Couldn't copy on this device");
+    }
+  }
+
+  // ---------- wiring ----------
+  $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound("song"); });
+  $("btn-singer").addEventListener("click", () => { storage.clearRound(); startRound("singer"); });
+  $("btn-resume").addEventListener("click", () => { const r = storage.loadRound(); startRound(r.mode, r); });
+  // Handle Enter and the button directly: sandboxed hosts block real form submission.
+  $("answer-form").addEventListener("submit", onSubmit);
+  $("btn-submit").addEventListener("click", onSubmit);
+  $("answer-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.isComposing) onSubmit(e);
+  });
+  $("btn-next").addEventListener("click", onNext);
+  // Two-tap quit (no browser pop-up, which sandboxed pages block).
+  let quitArmed = null;
+  $("btn-quit").addEventListener("click", () => {
+    const btn = $("btn-quit");
+    if (!quitArmed) {
+      btn.textContent = "Tap again to quit (progress is lost)";
+      quitArmed = setTimeout(() => { quitArmed = null; btn.textContent = "Quit round"; }, 3000);
+      return;
+    }
+    clearTimeout(quitArmed); quitArmed = null; btn.textContent = "Quit round";
+    stopTimer(); storage.clearRound(); round = null; renderHome();
+  });
+  $("btn-again").addEventListener("click", () => startRound(round.mode));
+  $("btn-home").addEventListener("click", renderHome);
+  $("btn-share").addEventListener("click", onShare);
+
+  renderTierLegend();
+  renderHome();
+})();
+
+</script>
+</body>
+</html>
