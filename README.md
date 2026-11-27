@@ -24,10 +24,27 @@ Open `index.html` in any browser (mobile or desktop). No build step or backend.
 
 Tiers in `js/data/artists.js` are hand-estimated from relative Spotify popularity, and every artist spans all six tiers. They can be replaced with real Spotify data without touching other code.
 
+## Playlists
+Artists and songs from shared Spotify playlists are added to the question pool.
+
+| Playlist | Added |
+|---|---|
+| Elmoooo | 35 new artists, songs merged into 10 existing ones |
+
+To add a playlist: export it as CSV with exportify.net, add it to the data files, then run:
+
+```
+node tools/check-playlist.js data/playlists/<name>.csv
+```
+
+This confirms every playlist song is accepted and lists artists that are not question artists. Only `Track Name`, `Artist Name(s)` and `Popularity` are kept from the export.
+
 ## Structure
 | File | Responsibility |
 |---|---|
-| `js/data/artists.js` | Question database: artists, songs by tier, aliases |
+| `js/data/artists.js` | Built-in artists: songs by tier, aliases |
+| `js/data/artists-playlists.js` | Artists added from playlists |
+| `js/data/playlists.js` | Playlist registry |
 | `js/validation.js` | Is this a song by the artist? (case, punctuation, aliases, typos) |
 | `js/scoring.js` | Tier → points, sink depth |
 | `js/engine.js` | Round state machine (no DOM) |

@@ -22,7 +22,7 @@ SS.ARTISTS = [
     tiers: [
       ["Shake It Off", "Blank Space", "Love Story", "Anti-Hero", "Cruel Summer", "You Belong with Me", "Bad Blood"],
       ["Style", "Delicate", "Lover", "Cardigan", "Look What You Made Me Do", "We Are Never Ever Getting Back Together", "All Too Well", "Wildest Dreams", "I Knew You Were Trouble"],
-      ["Enchanted", "22", "Willow", "Karma", "Mastermind", "Getaway Car", "August", "Fortnight", "Our Song", "Me!", "Teardrops on My Guitar", "The 1", "Red"],
+      ["Enchanted", "I Can Do It with a Broken Heart", "22", "Willow", "Karma", "Mastermind", "Getaway Car", "August", "Fortnight", "Our Song", "Me!", "Teardrops on My Guitar", "The 1", "Red"],
       ["Mine", "Fearless", "...Ready for It?", "Champagne Problems", "Exile", "Betty", "State of Grace", "Gorgeous", "Fifteen", "White Horse", "Back to December"],
       ["Clean", "Dear John", "The Last Great American Dynasty", "Tolerate It", "Long Live", "Holy Ground", "Dress", "Invisible String"],
       ["Mary's Song (Oh My My My)", "Tied Together with a Smile", "Superstar"]
@@ -86,9 +86,9 @@ SS.ARTISTS = [
     name: "Ed Sheeran",
     tiers: [
       ["Shape of You", "Perfect", "Thinking Out Loud", "Photograph", "Bad Habits"],
-      ["Shivers", "Castle on the Hill", "Galway Girl", "The A Team", "Happier", "Lego House", "I Don't Care", "Eyes Closed"],
-      ["Don't", "Sing", "Give Me Love", "Dive", "Supermarket Flowers", "Kiss Me", "Afterglow", "Overpass Graffiti", "Beautiful People"],
-      ["Small Bump", "Drunk", "You Need Me, I Don't Need You", "Tenerife Sea", "Bloodstream", "Nancy Mulligan", "Visiting Hours", "Barcelona", "Save Myself"],
+      ["Shivers", "Azizam", "Castle on the Hill", "Galway Girl", "The A Team", "Happier", "Lego House", "I Don't Care", "Eyes Closed"],
+      ["Don't", "Sapphire", "Sing", "Give Me Love", "Dive", "Supermarket Flowers", "Kiss Me", "Afterglow", "Overpass Graffiti", "Beautiful People"],
+      ["Small Bump", "Camera", "Old Phone", "Drunk", "You Need Me, I Don't Need You", "Tenerife Sea", "Bloodstream", "Nancy Mulligan", "Visiting Hours", "Barcelona", "Save Myself"],
       ["One", "Runaway", "Wake Me Up", "Grade 8", "Autumn Leaves", "New Man", "Tides"],
       ["The City", "U.N.I."]
     ],
@@ -98,7 +98,7 @@ SS.ARTISTS = [
     id: "coldplay",
     name: "Coldplay",
     tiers: [
-      ["Yellow", "Viva la Vida", "The Scientist", "Fix You", "A Sky Full of Stars"],
+      ["Yellow", "Something Just Like This", "Viva la Vida", "The Scientist", "Fix You", "A Sky Full of Stars"],
       ["Clocks", "Paradise", "Hymn for the Weekend", "Adventure of a Lifetime", "My Universe", "Higher Power"],
       ["Speed of Sound", "Trouble", "In My Place", "Magic", "Violet Hill", "Every Teardrop Is a Waterfall", "Charlie Brown", "Shiver", "Up&Up", "Orphans"],
       ["Lovers in Japan", "Talk", "Warning Sign", "Princess of China", "Don't Panic", "Everglow", "Strawberry Swing", "Life in Technicolor", "Sparks", "Midnight"],
@@ -238,5 +238,3 @@ SS.ARTISTS = [
     aliases: { "Room for 2": ["Room for Two"] }
   }
 ];
-
-SS.ARTISTS_BY_ID = Object.fromEntries(SS.ARTISTS.map((a) => [a.id, a]));
