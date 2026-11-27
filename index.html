@@ -3,55 +3,126 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a1633" />
-  <title>Krillion 2.0</title>
+  <meta name="theme-color" content="#cfe8ff" />
+  <title>Snuffleupagus Songs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="bg" aria-hidden="true">
-    <span class="orb orb-1"></span>
-    <span class="orb orb-2"></span>
-    <span class="orb orb-3"></span>
-  </div>
+  <!-- Tall light-to-dark gradient. Translated upward to "sink" on rare answers. -->
+  <div class="ocean" id="ocean" aria-hidden="true"></div>
+  <div class="bubbles" id="bubbles" aria-hidden="true"></div>
 
-  <main class="home">
-    <header class="brand">
-      <h1 class="logo">KRILLION<span>2.0</span></h1>
-      <p class="tagline">Think obscure. The rarest answer wins.</p>
-    </header>
+  <main class="app">
 
-    <section class="modes" aria-label="Choose a game mode">
-      <button class="mode-card" data-mode="rarest-song" type="button">
-        <span class="mode-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
-        </span>
-        <span class="mode-text">
-          <span class="mode-title">Guess the Rarest Song</span>
-          <span class="mode-desc">We pick the singer. You name their least-known song.</span>
-        </span>
-        <span class="chev" aria-hidden="true">›</span>
-      </button>
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <header class="brand">
+        <h1 class="logo">Snuffleupagus<span>Songs</span></h1>
+        <p class="tagline">Name the song nobody else would. The rarer the answer, the deeper you sink.</p>
+      </header>
 
-      <button class="mode-card" data-mode="rarest-singer" type="button">
-        <span class="mode-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v5" /><path d="M8 22h8" /></svg>
-        </span>
-        <span class="mode-text">
-          <span class="mode-title">Guess the Rarest Singer</span>
-          <span class="mode-desc">Name the singer nobody else would think of.</span>
-        </span>
-        <span class="chev" aria-hidden="true">›</span>
-      </button>
+      <button class="resume" id="btn-resume" type="button" hidden>Resume your round →</button>
+
+      <div class="modes">
+        <button class="mode-card" id="btn-play" type="button">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+          </span>
+          <span class="mode-text">
+            <span class="mode-title">Guess the Rarest Song</span>
+            <span class="mode-desc">We pick the singer. You name their least-known song.</span>
+          </span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+
+        <button class="mode-card is-soon" id="btn-singer" type="button">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v5" /><path d="M8 22h8" /></svg>
+          </span>
+          <span class="mode-text">
+            <span class="mode-title">Guess the Rarest Singer <em class="soon">Soon</em></span>
+            <span class="mode-desc">Name the singer nobody else would think of.</span>
+          </span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <dl class="stats" id="stats">
+        <div><dt>Rounds today</dt><dd data-stat="roundsToday">0</dd></div>
+        <div><dt>Best today</dt><dd data-stat="bestToday">0</dd></div>
+        <div><dt>Best ever</dt><dd data-stat="bestScore">0</dd></div>
+        <div><dt>Total points</dt><dd data-stat="totalPoints">0</dd></div>
+      </dl>
+
+      <details class="legend">
+        <summary>How scoring works</summary>
+        <p>Every round has 7 singers. You get 25 seconds to name one of their songs. Popular songs score little. Deep cuts score big.</p>
+        <ol class="tier-list" id="tier-list"></ol>
+      </details>
     </section>
 
-    <footer class="foot">Gameplay coming soon</footer>
+    <!-- GAME -->
+    <section class="screen" id="screen-game" hidden>
+      <div class="hud">
+        <span class="pill" id="hud-question">Song 1 / 7</span>
+        <div class="timer" id="timer" role="timer" aria-label="Time remaining">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="19" /><circle class="ring" id="timer-ring" cx="22" cy="22" r="19" /></svg>
+          <span id="timer-text">25</span>
+        </div>
+        <span class="pill" id="hud-score">0 pts</span>
+      </div>
+
+      <div class="progress" id="progress" aria-hidden="true"></div>
+
+      <div class="card" id="question-card">
+        <p class="prompt-label">Name a song by</p>
+        <h2 class="artist" id="artist-name">Artist</h2>
+
+        <form class="answer-form" id="answer-form" autocomplete="off">
+          <input id="answer-input" type="text" placeholder="Type a song title…" aria-label="Your answer"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="120" />
+          <button type="submit" class="btn primary">Submit</button>
+        </form>
+        <p class="error" id="answer-error" role="alert"></p>
+
+        <div class="feedback" id="feedback" hidden>
+          <div class="tier-badge" id="fb-badge"><span class="tier-name"></span><span class="tier-word"></span></div>
+          <p class="fb-points" id="fb-points">+0</p>
+          <p class="fb-answer" id="fb-answer"></p>
+          <p class="fb-rare" id="fb-rare"></p>
+          <button type="button" class="btn primary" id="btn-next">Next song</button>
+        </div>
+      </div>
+
+      <button type="button" class="quit" id="btn-quit">Quit round</button>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="screen" id="screen-results" hidden>
+      <div class="card results-card">
+        <p class="prompt-label">Round complete</p>
+        <p class="final-score"><span id="final-score">0</span><small> / 700</small></p>
+        <p class="final-note" id="final-note"></p>
+        <ol class="result-list" id="result-list"></ol>
+        <div class="result-actions">
+          <button type="button" class="btn primary" id="btn-again">Play again</button>
+          <button type="button" class="btn ghost" id="btn-share">Copy results</button>
+          <button type="button" class="btn ghost" id="btn-home">Home</button>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <div class="toast" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js"></script>
+  <script src="js/data/artists.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/validation.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
 </body>
 </html>
