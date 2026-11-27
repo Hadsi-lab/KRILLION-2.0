@@ -17,9 +17,9 @@ window.SS = window.SS || {};
   });
 
   const G = { m: "male", f: "female" };
-  // Rock, Latin and R&B are tagged in the data but not asked as categories.
-  const GENRE = { pop: "pop", country: "country" };
-  const COUNTRY = { au: "Australian", uk: "British", ca: "Canadian" };
+  // Only pop is asked as a genre. Rock, Latin, R&B, country music and nationality
+  // are kept in the data but not asked as categories.
+  const GENRE = { pop: "pop" };
 
   // Category definitions: [id, label, filter]
   const defs = [["singer", "singer", () => true]];
@@ -29,7 +29,6 @@ window.SS = window.SS || {};
     Object.entries(G).forEach(([g, gw]) =>
       defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
   });
-  Object.entries(COUNTRY).forEach(([c, word]) => defs.push([c, `${word} singer`, (s) => s.country === c]));
 
   // Share of a category (by popularity rank) in each tier: lots common, few rare.
   const CUTS = [0.25, 0.45, 0.65, 0.82, 0.94, 1];
