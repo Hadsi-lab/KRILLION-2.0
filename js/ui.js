@@ -282,7 +282,6 @@
   $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound(); });
   $("btn-resume").addEventListener("click", () => startRound(storage.loadRound()));
   $("btn-singer").addEventListener("click", () => toast("Guess the Rarest Singer is coming soon"));
-  $("btn-lyric").addEventListener("click", () => toast("Guess the Song from the Lyric is coming soon"));
   $("answer-form").addEventListener("submit", onSubmit);
   $("btn-next").addEventListener("click", onNext);
   $("btn-quit").addEventListener("click", () => {
