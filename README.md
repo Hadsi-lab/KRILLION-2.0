@@ -56,11 +56,14 @@ This confirms every playlist song is accepted and lists artists that are not que
 | `js/data/singers.js` | Singer database |
 | `js/singers.js` | Singer categories and per-category tiers |
 | `js/modes.js` | Per-mode questions, prompts and answer checks |
-| `js/validation.js` | Is this a song by the artist? (case, punctuation, aliases, typos) |
+| `js/validation.js` | Is this a song by the artist? (case, punctuation, aliases, typos, partial names) |
 | `js/scoring.js` | Tier → points, sink depth |
 | `js/engine.js` | Round state machine (no DOM) |
 | `js/storage.js` | Player stats and saved round |
 | `js/ui.js` | Screens, timer, animations |
+
+## Partial answers
+A first name, surname or the start of a name counts as the most famous match: "Michael" is Michael Jackson, "Swift" is Taylor Swift, "Bohemian" is Bohemian Rhapsody. That singer is then checked against the category, so a one-word guess can't land a rare answer by accident.
 
 ## Known limits
 - Only songs and singers in the database are accepted. A real but unlisted answer is rejected.

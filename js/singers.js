@@ -42,10 +42,11 @@ window.SS = window.SS || {};
       aliases: s.aliases,
       tier: CUTS.findIndex((c) => (i + 1) / members.length <= c + 1e-9)
     }));
-    return { id, label, article: /^([aeiou]|r&b)/i.test(label) ? "an" : "a", items, index: SS.validation.buildIndex(items) };
+    return { id, label, article: /^([aeiou]|r&b)/i.test(label) ? "an" : "a", items };
   }).filter((c) => c.items.length >= MIN_SINGERS);
 
-  const allIndex = SS.validation.buildIndex(singers.map((s) => ({ title: s.name, aliases: s.aliases })));
+  const allIndex = SS.validation.buildIndex(singers.slice().sort((a, b) => b.popularity - a.popularity)
+    .map((s) => ({ title: s.name, aliases: s.aliases })));
   const byId = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   SS.singers = {
@@ -54,11 +55,13 @@ window.SS = window.SS || {};
     category: (id) => byId[id],
 
     /** { status: "ok", title, tier } | { status: "wrong-category", title } | { status: "unknown" } */
+    // Resolve the name across all singers first (a partial name means the most famous
+    // singer with that name, e.g. "Michael" -> Michael Jackson), then check the category.
     match(categoryId, input) {
-      const hit = SS.validation.matchIndex(byId[categoryId].index, input);
-      if (hit) return { status: "ok", title: hit.title, tier: hit.tier };
-      const known = SS.validation.matchIndex(allIndex, input);
-      return known ? { status: "wrong-category", title: known.title } : { status: "unknown" };
+      const known = SS.validation.matchIndex(allIndex, input, { partial: "name" });
+      if (!known) return { status: "unknown" };
+      const hit = byId[categoryId].items.find((i) => i.title === known.title);
+      return hit ? { status: "ok", title: hit.title, tier: hit.tier } : { status: "wrong-category", title: known.title };
     },
 
     rarestExample(categoryId) {

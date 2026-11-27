@@ -1,11 +1,12 @@
 /*
- * Answer validation: decides whether typed text is a song by the given artist.
- * Knows nothing about scoring — it returns the matched song and its tier index.
+ * Answer validation: matches typed text against song titles or singer names
+ * (case, punctuation, aliases, small typos, partial names). Knows nothing about scoring.
  */
 window.SS = window.SS || {};
 
 (function () {
-  function normalize(text) {
+  // Lowercase words without accents/punctuation; drops a leading "the/a/an".
+  function words(text) {
     return String(text)
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
       .toLowerCase()
@@ -14,7 +15,12 @@ window.SS = window.SS || {};
       .replace(/[^a-z0-9 ]+/g, " ")
       .trim()
       .replace(/^(the|a|an) /, "")
-      .replace(/\s+/g, "");
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  function normalize(text) {
+    return words(text).join("");
   }
 
   // Keys a title can be matched by: full title, title without "(...)",
@@ -51,22 +57,51 @@ window.SS = window.SS || {};
     return 2;
   }
 
-  /** items: [{ title, tier, aliases? }] -> searchable entries */
+  /**
+   * items: [{ title, tier, aliases? }], most popular first -> searchable entries.
+   * entries.words holds each name split into words, for partial-name matching.
+   */
   function buildIndex(items) {
     const entries = [];
+    entries.words = [];
     items.forEach((item) => {
-      [item.title, ...(item.aliases || [])].forEach((name) =>
-        keysForTitle(name).forEach((key) => entries.push({ key, item })));
+      [item.title, ...(item.aliases || [])].forEach((name) => {
+        keysForTitle(name).forEach((key) => entries.push({ key, item }));
+        const stripped = name.replace(/\([^)]*\)/g, " ");
+        entries.words.push({ tokens: words(stripped), item });
+      });
     });
     return entries;
   }
 
-  /** Returns the matched item, or null. Exact key first, then closest typo match. */
-  function matchIndex(entries, input) {
+  /*
+   * Partial match: the typed words are the start of a name ("Michael" -> Michael Jackson,
+   * "Bohemian" -> Bohemian Rhapsody), or with mode "name", a surname ("Swift").
+   * Returns the first (most popular) match.
+   */
+  function partialMatch(entries, input, mode) {
+    const typed = words(input);
+    if (typed.join("").length < 3) return null;
+    for (const w of entries.words) {
+      if (w.tokens.length <= typed.length) continue;
+      const prefix = typed.every((t, i) => t === w.tokens[i]);
+      const surname = mode === "name" && typed.length === 1 && w.tokens[w.tokens.length - 1] === typed[0];
+      if (prefix || surname) return w.item;
+    }
+    return null;
+  }
+
+  /**
+   * Returns the matched item, or null. Exact key first, then (if options.partial is
+   * "prefix" or "name") a partial name, then the closest typo match.
+   */
+  function matchIndex(entries, input, options = {}) {
     const key = normalize(input);
     if (key.length < 1) return null;
     const exact = entries.find((e) => e.key === key);
     if (exact) return exact.item;
+    const partial = options.partial ? partialMatch(entries, input, options.partial) : null;
+    if (partial) return partial;
     let best = null;
     for (const e of entries) {
       const limit = allowedTypos(Math.min(e.key.length, key.length));
@@ -93,7 +128,7 @@ window.SS = window.SS || {};
     matchIndex,
     /** Song mode: returns { title, tier } or null if not a known song by the artist. */
     match(artistId, input) {
-      const item = matchIndex(songIndex(artistId), input);
+      const item = matchIndex(songIndex(artistId), input, { partial: "prefix" });
       return item ? { title: item.title, tier: item.tier } : null;
     }
   };
