@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1633" />
+  <title>Krillion 2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+  </div>
+
+  <main class="home">
+    <header class="brand">
+      <h1 class="logo">KRILLION<span>2.0</span></h1>
+      <p class="tagline">Think obscure. The rarest answer wins.</p>
+    </header>
+
+    <section class="modes" aria-label="Choose a game mode">
+      <button class="mode-card" data-mode="rarest-song" type="button">
+        <span class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+        </span>
+        <span class="mode-text">
+          <span class="mode-title">Guess the Rarest Song</span>
+          <span class="mode-desc">We pick the singer. You name their least-known song.</span>
+        </span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+
+      <button class="mode-card" data-mode="rarest-singer" type="button">
+        <span class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v5" /><path d="M8 22h8" /></svg>
+        </span>
+        <span class="mode-text">
+          <span class="mode-title">Guess the Rarest Singer</span>
+          <span class="mode-desc">Name the singer nobody else would think of.</span>
+        </span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+    </section>
+
+    <footer class="foot">Gameplay coming soon</footer>
+  </main>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
