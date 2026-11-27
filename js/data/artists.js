@@ -2,7 +2,10 @@
  * Question database: "Name a song by <artist>".
  *
  * Each artist lists accepted songs grouped by rarity tier:
- *   tiers[0] = most popular (Elmo)  ...  tiers[5] = rarest (Snuffy)
+ *   tiers[0] = most popular  ...  tiers[5] = rarest
+ *
+ * These groups set each song's popularity ORDER. The scored tier comes from the
+ * song's rank within the artist, using SS.scoring.TIER_CUTS (see scoring.js).
  *
  * Tiers are estimates of relative Spotify popularity (stream counts / popularity
  * score). Every artist covers the full spectrum: many popular songs at the top,

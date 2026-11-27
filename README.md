@@ -18,6 +18,8 @@ Open `index.html` in any browser (mobile or desktop). No backend.
 - Unlimited rounds per day. Progress, an in-progress round and stats are saved in the browser (`localStorage`).
 
 ## Rarity tiers (worst → best)
+In both modes, answers are ranked by popularity and split: top 20% Elmo, 15% Monster, 15% Noodle, 20% Grouchy, 15% Abby, last 15% Snuffy (`TIER_CUTS` in `js/scoring.js`).
+
 | Tier | Points |
 |---|---|
 | Elmo: Awful | 10 |
@@ -45,7 +47,7 @@ node tools/check-playlist.js data/playlists/<name>.csv
 This confirms every playlist song is accepted and lists artists that are not question artists. Only `Track Name`, `Artist Name(s)` and `Popularity` are kept from the export.
 
 ## Singer mode
-`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories are singer, male singer, female singer, pop singer, male pop singer and female pop singer (4 of 7 questions per round are pop) are built from those fields. Within each category, singers are ranked by popularity and split into tiers (top 25% Elmo ... bottom 6% Snuffy). A known singer who doesn't fit the category gets a "doesn't count as..." message.
+`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories are singer, male singer, female singer, pop singer, male pop singer and female pop singer (4 of 7 questions per round are pop) are built from those fields. Within each category, singers are ranked by popularity and split into tiers using the shared shares below. A known singer who doesn't fit the category gets a "doesn't count as..." message.
 
 ## Structure
 | File | Responsibility |

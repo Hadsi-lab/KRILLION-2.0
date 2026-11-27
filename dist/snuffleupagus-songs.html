@@ -408,7 +408,10 @@ button { font: inherit; }
  * Question database: "Name a song by <artist>".
  *
  * Each artist lists accepted songs grouped by rarity tier:
- *   tiers[0] = most popular (Elmo)  ...  tiers[5] = rarest (Snuffy)
+ *   tiers[0] = most popular  ...  tiers[5] = rarest
+ *
+ * These groups set each song's popularity ORDER. The scored tier comes from the
+ * song's rank within the artist, using SS.scoring.TIER_CUTS (see scoring.js).
  *
  * Tiers are estimates of relative Spotify popularity (stream counts / popularity
  * score). Every artist covers the full spectrum: many popular songs at the top,
@@ -1762,6 +1765,17 @@ SS.scoring = {
   ],
   MAX_POINTS: 100,
 
+  /*
+   * Share of answers in each tier, as cumulative cut-offs by popularity rank:
+   * top 20% Elmo, next 15% Monster, 15% Noodle, 20% Grouchy, 15% Abby, last 15% Snuffy.
+   */
+  TIER_CUTS: [0.20, 0.35, 0.50, 0.70, 0.85, 1],
+
+  /** Tier for the item at popularity rank `index` (0 = most popular) out of `count`. */
+  tierForRank(index, count) {
+    return this.TIER_CUTS.findIndex((c) => (index + 1) / count <= c + 1e-9);
+  },
+
   score(tierIndex) {
     const tier = this.TIERS[tierIndex];
     return { tier, points: tier.points };
@@ -1891,19 +1905,26 @@ window.SS = window.SS || {};
   }
 
   const songIndexCache = {};
+  // The data lists songs from most to least popular (grouped by tier); the scored
+  // tier comes from each song's rank, using the shared tier shares in scoring.js.
+  function songItems(artistId) {
+    const artist = SS.ARTISTS_BY_ID[artistId];
+    const titles = artist.tiers.flat();
+    return titles.map((title, i) => ({
+      title, tier: SS.scoring.tierForRank(i, titles.length), aliases: (artist.aliases || {})[title] || []
+    }));
+  }
+
   function songIndex(artistId) {
     if (songIndexCache[artistId]) return songIndexCache[artistId];
-    const artist = SS.ARTISTS_BY_ID[artistId];
-    const items = [];
-    artist.tiers.forEach((songs, tier) =>
-      songs.forEach((title) => items.push({ title, tier, aliases: (artist.aliases || {})[title] || [] })));
-    return (songIndexCache[artistId] = buildIndex(items));
+    return (songIndexCache[artistId] = buildIndex(songItems(artistId)));
   }
 
   SS.validation = {
     normalize,
     buildIndex,
     matchIndex,
+    songItems,
     /** Song mode: returns { title, tier } or null if not a known song by the artist. */
     match(artistId, input) {
       const item = matchIndex(songIndex(artistId), input, { partial: "prefix" });
@@ -1947,8 +1968,6 @@ window.SS = window.SS || {};
       defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
   });
 
-  // Share of a category (by popularity rank) in each tier: lots common, few rare.
-  const CUTS = [0.25, 0.45, 0.65, 0.82, 0.94, 1];
   const MIN_SINGERS = 15;
 
   const categories = defs.map(([id, label, filter]) => {
@@ -1956,7 +1975,7 @@ window.SS = window.SS || {};
     const items = members.map((s, i) => ({
       title: s.name,
       aliases: s.aliases,
-      tier: CUTS.findIndex((c) => (i + 1) / members.length <= c + 1e-9)
+      tier: SS.scoring.tierForRank(i, members.length)
     }));
     return { id, label, article: /^([aeiou]|r&b)/i.test(label) ? "an" : "a", items };
   }).filter((c) => c.items.length >= MIN_SINGERS);
@@ -2020,8 +2039,8 @@ window.SS = window.SS || {};
         return { status: "invalid", message: `We don't know "${input}" as a song by ${SS.ARTISTS_BY_ID[q].name}. Try another!` };
       },
       rarestExample(q) {
-        const rare = SS.ARTISTS_BY_ID[q].tiers[5];
-        return rare[Math.floor(Math.random() * rare.length)];
+        const rare = SS.validation.songItems(q).filter((s) => s.tier === 5);
+        return rare[Math.floor(Math.random() * rare.length)].title;
       }
     },
 

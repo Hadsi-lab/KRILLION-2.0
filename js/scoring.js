@@ -12,6 +12,17 @@ SS.scoring = {
   ],
   MAX_POINTS: 100,
 
+  /*
+   * Share of answers in each tier, as cumulative cut-offs by popularity rank:
+   * top 20% Elmo, next 15% Monster, 15% Noodle, 20% Grouchy, 15% Abby, last 15% Snuffy.
+   */
+  TIER_CUTS: [0.20, 0.35, 0.50, 0.70, 0.85, 1],
+
+  /** Tier for the item at popularity rank `index` (0 = most popular) out of `count`. */
+  tierForRank(index, count) {
+    return this.TIER_CUTS.findIndex((c) => (index + 1) / count <= c + 1e-9);
+  },
+
   score(tierIndex) {
     const tier = this.TIERS[tierIndex];
     return { tier, points: tier.points };

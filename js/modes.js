@@ -28,8 +28,8 @@ window.SS = window.SS || {};
         return { status: "invalid", message: `We don't know "${input}" as a song by ${SS.ARTISTS_BY_ID[q].name}. Try another!` };
       },
       rarestExample(q) {
-        const rare = SS.ARTISTS_BY_ID[q].tiers[5];
-        return rare[Math.floor(Math.random() * rare.length)];
+        const rare = SS.validation.songItems(q).filter((s) => s.tier === 5);
+        return rare[Math.floor(Math.random() * rare.length)].title;
       }
     },
 

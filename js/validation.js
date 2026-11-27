@@ -113,19 +113,26 @@ window.SS = window.SS || {};
   }
 
   const songIndexCache = {};
+  // The data lists songs from most to least popular (grouped by tier); the scored
+  // tier comes from each song's rank, using the shared tier shares in scoring.js.
+  function songItems(artistId) {
+    const artist = SS.ARTISTS_BY_ID[artistId];
+    const titles = artist.tiers.flat();
+    return titles.map((title, i) => ({
+      title, tier: SS.scoring.tierForRank(i, titles.length), aliases: (artist.aliases || {})[title] || []
+    }));
+  }
+
   function songIndex(artistId) {
     if (songIndexCache[artistId]) return songIndexCache[artistId];
-    const artist = SS.ARTISTS_BY_ID[artistId];
-    const items = [];
-    artist.tiers.forEach((songs, tier) =>
-      songs.forEach((title) => items.push({ title, tier, aliases: (artist.aliases || {})[title] || [] })));
-    return (songIndexCache[artistId] = buildIndex(items));
+    return (songIndexCache[artistId] = buildIndex(songItems(artistId)));
   }
 
   SS.validation = {
     normalize,
     buildIndex,
     matchIndex,
+    songItems,
     /** Song mode: returns { title, tier } or null if not a known song by the artist. */
     match(artistId, input) {
       const item = matchIndex(songIndex(artistId), input, { partial: "prefix" });

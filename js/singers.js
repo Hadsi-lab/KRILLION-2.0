@@ -30,8 +30,6 @@ window.SS = window.SS || {};
       defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
   });
 
-  // Share of a category (by popularity rank) in each tier: lots common, few rare.
-  const CUTS = [0.25, 0.45, 0.65, 0.82, 0.94, 1];
   const MIN_SINGERS = 15;
 
   const categories = defs.map(([id, label, filter]) => {
@@ -39,7 +37,7 @@ window.SS = window.SS || {};
     const items = members.map((s, i) => ({
       title: s.name,
       aliases: s.aliases,
-      tier: CUTS.findIndex((c) => (i + 1) / members.length <= c + 1e-9)
+      tier: SS.scoring.tierForRank(i, members.length)
     }));
     return { id, label, article: /^([aeiou]|r&b)/i.test(label) ? "an" : "a", items };
   }).filter((c) => c.items.length >= MIN_SINGERS);
