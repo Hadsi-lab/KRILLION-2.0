@@ -51,38 +51,50 @@ window.SS = window.SS || {};
     return 2;
   }
 
-  const indexCache = {};
-  function indexFor(artistId) {
-    if (indexCache[artistId]) return indexCache[artistId];
-    const artist = SS.ARTISTS_BY_ID[artistId];
+  /** items: [{ title, tier, aliases? }] -> searchable entries */
+  function buildIndex(items) {
     const entries = [];
-    artist.tiers.forEach((songs, tier) => {
-      songs.forEach((title) => {
-        const names = [title, ...((artist.aliases || {})[title] || [])];
-        names.forEach((n) => keysForTitle(n).forEach((key) => entries.push({ key, title, tier })));
-      });
+    items.forEach((item) => {
+      [item.title, ...(item.aliases || [])].forEach((name) =>
+        keysForTitle(name).forEach((key) => entries.push({ key, item })));
     });
-    return (indexCache[artistId] = entries);
+    return entries;
+  }
+
+  /** Returns the matched item, or null. Exact key first, then closest typo match. */
+  function matchIndex(entries, input) {
+    const key = normalize(input);
+    if (key.length < 1) return null;
+    const exact = entries.find((e) => e.key === key);
+    if (exact) return exact.item;
+    let best = null;
+    for (const e of entries) {
+      const limit = allowedTypos(Math.min(e.key.length, key.length));
+      if (limit === 0 || Math.abs(e.key.length - key.length) > limit) continue;
+      const d = levenshtein(key, e.key);
+      if (d <= limit && (!best || d < best.d)) best = { d, e };
+    }
+    return best ? best.e.item : null;
+  }
+
+  const songIndexCache = {};
+  function songIndex(artistId) {
+    if (songIndexCache[artistId]) return songIndexCache[artistId];
+    const artist = SS.ARTISTS_BY_ID[artistId];
+    const items = [];
+    artist.tiers.forEach((songs, tier) =>
+      songs.forEach((title) => items.push({ title, tier, aliases: (artist.aliases || {})[title] || [] })));
+    return (songIndexCache[artistId] = buildIndex(items));
   }
 
   SS.validation = {
     normalize,
-    /** Returns { title, tier } or null if the answer isn't a known song by the artist. */
+    buildIndex,
+    matchIndex,
+    /** Song mode: returns { title, tier } or null if not a known song by the artist. */
     match(artistId, input) {
-      const key = normalize(input);
-      if (key.length < 1) return null;
-      const entries = indexFor(artistId);
-      const exact = entries.find((e) => e.key === key);
-      if (exact) return { title: exact.title, tier: exact.tier };
-
-      let best = null;
-      for (const e of entries) {
-        const limit = allowedTypos(Math.min(e.key.length, key.length));
-        if (limit === 0 || Math.abs(e.key.length - key.length) > limit) continue;
-        const d = levenshtein(key, e.key);
-        if (d <= limit && (!best || d < best.d)) best = { d, e };
-      }
-      return best ? { title: best.e.title, tier: best.e.tier } : null;
+      const item = matchIndex(songIndex(artistId), input);
+      return item ? { title: item.title, tier: item.tier } : null;
     }
   };
 })();

@@ -102,8 +102,9 @@
   }
 
   // ---------- game ----------
-  function startRound(existing) {
-    round = existing || engine.newRound();
+  function startRound(modeId, existing) {
+    round = existing || engine.newRound(modeId);
+    $("answer-input").placeholder = engine.mode(round).placeholder;
     storage.saveRound(round);
     show("game");
     if (round.phase === "feedback") renderFeedback(round.answers[round.answers.length - 1], false);
@@ -111,7 +112,7 @@
   }
 
   function renderHud() {
-    $("hud-question").textContent = `Song ${Math.min(round.index + 1, engine.QUESTIONS_PER_ROUND)} / ${engine.QUESTIONS_PER_ROUND}`;
+    $("hud-question").textContent = `${engine.mode(round).hudWord} ${Math.min(round.index + 1, engine.QUESTIONS_PER_ROUND)} / ${engine.QUESTIONS_PER_ROUND}`;
     $("hud-score").textContent = `${engine.total(round)} pts`;
     const prog = $("progress");
     prog.innerHTML = "";
@@ -125,8 +126,7 @@
 
   function renderQuestion() {
     surface();
-    const artist = engine.currentArtist(round);
-    $("artist-name").textContent = artist.name;
+    renderPrompt(engine.currentQuestion(round));
     $("answer-form").hidden = false;
     $("feedback").hidden = true;
     $("answer-error").textContent = "";
@@ -136,6 +136,12 @@
     renderHud();
     input.focus();
     startTimer();
+  }
+
+  function renderPrompt(q) {
+    const p = engine.prompt(round, q);
+    $("prompt-label").textContent = p.label;
+    $("artist-name").textContent = p.heading;
   }
 
   function startTimer() {
@@ -171,8 +177,7 @@
     if (!text) return;
     const result = engine.submit(round, text);
     if (result.status === "invalid") {
-      const artist = engine.currentArtist(round);
-      $("answer-error").textContent = `We don't know "${text}" as a song by ${artist.name}. Try another!`;
+      $("answer-error").textContent = result.message;
       const form = $("answer-form");
       form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
       input.select();
@@ -188,7 +193,7 @@
     $("answer-form").hidden = true;
     $("answer-error").textContent = "";
     $("feedback").hidden = false;
-    $("artist-name").textContent = SS.ARTISTS_BY_ID[answer.artistId].name;
+    renderPrompt(answer.q);
     renderHud();
 
     const badge = $("fb-badge");
@@ -197,10 +202,10 @@
     if (answer.timedOut) {
       $("fb-answer").innerHTML = "Time's up!";
     } else {
-      $("fb-answer").innerHTML = `You said <strong>${escapeHtml(answer.song)}</strong>`;
+      $("fb-answer").innerHTML = `You said <strong>${escapeHtml(answer.answer)}</strong>`;
     }
     $("fb-rare").textContent = answer.tierIndex === 5 ? "Nobody saw that one coming."
-      : `A Snuffy answer: ${engine.rarestExample(answer.artistId)}`;
+      : `A Snuffy answer: ${engine.rarestExample(round, answer.q)}`;
 
     countUp($("fb-points"), answer.points, animate ? 900 : 0);
     if (animate) sink(answer.points);
@@ -208,7 +213,7 @@
 
     const isLast = round.index + 1 >= engine.QUESTIONS_PER_ROUND;
     const next = $("btn-next");
-    next.textContent = isLast ? "See results" : "Next song";
+    next.textContent = isLast ? "See results" : "Next";
     next.focus({ preventScroll: true });
   }
 
@@ -242,7 +247,7 @@
     $("final-score").nextElementSibling.textContent = ` / ${engine.maxTotal()}`;
     const best = round.answers.reduce((a, b) => (b.points > a.points ? b : a));
     $("final-note").textContent = best.points
-      ? `Deepest answer: ${best.song} (${best.points} pts)`
+      ? `Deepest answer: ${best.answer} (${best.points} pts)`
       : "No answers this time. Dive back in!";
 
     const list = $("result-list");
@@ -251,8 +256,8 @@
       const li = document.createElement("li");
       li.style.animationDelay = `${i * 70}ms`;
       li.innerHTML = `
-        <span class="r-artist">${escapeHtml(SS.ARTISTS_BY_ID[a.artistId].name)}</span>
-        <span class="r-song${a.song ? "" : " miss"}">${a.song ? escapeHtml(a.song) : "Time ran out"}</span>
+        <span class="r-artist">${escapeHtml(engine.prompt(round, a.q).heading)}</span>
+        <span class="r-song${a.answer ? "" : " miss"}">${a.answer ? escapeHtml(a.answer) : "Time ran out"}</span>
         <span class="r-right"><span class="r-points">${a.points}</span></span>`;
       li.querySelector(".r-right").appendChild(tierBadge(a.tierIndex, true));
       list.appendChild(li);
@@ -264,9 +269,9 @@
   function shareText() {
     const lines = round.answers.map((a, i) => {
       const tier = a.tierIndex == null ? "—" : scoring.TIERS[a.tierIndex].name;
-      return `${i + 1}. ${SS.ARTISTS_BY_ID[a.artistId].name}: ${tier} (${a.points})`;
+      return `${i + 1}. ${engine.prompt(round, a.q).heading}: ${tier} (${a.points})`;
     });
-    return `Snuffleupagus Songs: ${engine.total(round)}/${engine.maxTotal()}\n${lines.join("\n")}`;
+    return `Snuffleupagus Songs (${engine.mode(round).name}): ${engine.total(round)}/${engine.maxTotal()}\n${lines.join("\n")}`;
   }
 
   async function onShare() {
@@ -279,15 +284,15 @@
   }
 
   // ---------- wiring ----------
-  $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound(); });
-  $("btn-resume").addEventListener("click", () => startRound(storage.loadRound()));
-  $("btn-singer").addEventListener("click", () => toast("Guess the Rarest Singer is coming soon"));
+  $("btn-play").addEventListener("click", () => { storage.clearRound(); startRound("song"); });
+  $("btn-singer").addEventListener("click", () => { storage.clearRound(); startRound("singer"); });
+  $("btn-resume").addEventListener("click", () => { const r = storage.loadRound(); startRound(r.mode, r); });
   $("answer-form").addEventListener("submit", onSubmit);
   $("btn-next").addEventListener("click", onNext);
   $("btn-quit").addEventListener("click", () => {
     if (confirm("Quit this round? Your progress will be lost.")) { stopTimer(); storage.clearRound(); round = null; renderHome(); }
   });
-  $("btn-again").addEventListener("click", () => startRound());
+  $("btn-again").addEventListener("click", () => startRound(round.mode));
   $("btn-home").addEventListener("click", renderHome);
   $("btn-share").addEventListener("click", onShare);
 

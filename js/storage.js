@@ -45,7 +45,10 @@ window.SS = window.SS || {};
     },
 
     saveRound(round) { const d = load(); d.current = round; save(d); },
-    loadRound() { return load().current || null; },
+    loadRound() {
+      const r = load().current;
+      return r && r.mode && SS.modes[r.mode] ? r : null; // ignore rounds saved by older versions
+    },
     clearRound() { const d = load(); delete d.current; save(d); }
   };
 })();

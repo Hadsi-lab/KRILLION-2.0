@@ -21,7 +21,7 @@
     <section class="screen" id="screen-home">
       <header class="brand">
         <h1 class="logo">Snuffleupagus<span>Songs</span></h1>
-        <p class="tagline">Name the song nobody else would. The rarer the answer, the deeper you sink.</p>
+        <p class="tagline">Give the answer nobody else would. The rarer it is, the deeper you sink.</p>
       </header>
 
       <button class="resume" id="btn-resume" type="button" hidden>Resume your round →</button>
@@ -38,13 +38,13 @@
           <span class="chev" aria-hidden="true">›</span>
         </button>
 
-        <button class="mode-card is-soon" id="btn-singer" type="button">
+        <button class="mode-card" id="btn-singer" type="button">
           <span class="mode-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v5" /><path d="M8 22h8" /></svg>
           </span>
           <span class="mode-text">
-            <span class="mode-title">Guess the Rarest Singer <em class="soon">Soon</em></span>
-            <span class="mode-desc">Name the singer nobody else would think of.</span>
+            <span class="mode-title">Guess the Rarest Singer</span>
+            <span class="mode-desc">We pick the category. You name the singer nobody else would think of.</span>
           </span>
           <span class="chev" aria-hidden="true">›</span>
         </button>
@@ -60,7 +60,7 @@
 
       <details class="legend">
         <summary>How scoring works</summary>
-        <p>Every round has 7 singers. You get 25 seconds to name one of their songs. Popular songs score little. Deep cuts score big.</p>
+        <p>Every round has 7 questions and 25 seconds per question. Name a song by the artist, or a singer that fits the category. Popular answers score little. Rare ones score big.</p>
         <ol class="tier-list" id="tier-list"></ol>
       </details>
     </section>
@@ -79,7 +79,7 @@
       <div class="progress" id="progress" aria-hidden="true"></div>
 
       <div class="card" id="question-card">
-        <p class="prompt-label">Name a song by</p>
+        <p class="prompt-label" id="prompt-label">Name a song by</p>
         <h2 class="artist" id="artist-name">Artist</h2>
 
         <form class="answer-form" id="answer-form" autocomplete="off">
@@ -123,8 +123,11 @@
   <script src="js/data/artists-playlists.js"></script>
   <script src="js/data/playlists.js"></script>
   <script src="js/data/index.js"></script>
+  <script src="js/data/singers.js"></script>
   <script src="js/scoring.js"></script>
   <script src="js/validation.js"></script>
+  <script src="js/singers.js"></script>
+  <script src="js/modes.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/ui.js"></script>
