@@ -13,10 +13,11 @@ SS.scoring = {
   MAX_POINTS: 100,
 
   /*
-   * Share of answers in each tier, as cumulative cut-offs by popularity rank:
-   * top 20% Elmo, next 15% Monster, 15% Noodle, 20% Grouchy, 15% Abby, last 15% Snuffy.
+   * Share of answers in each tier, as cumulative cut-offs by popularity rank.
+   * Shares never grow from Elmo (most answers, easiest) to Snuffy (fewest, hardest):
+   * 19% Elmo, 19% Monster, 18% Noodle, 18% Grouchy, 14% Abby, 12% Snuffy.
    */
-  TIER_CUTS: [0.20, 0.35, 0.50, 0.70, 0.85, 1],
+  TIER_CUTS: [0.19, 0.38, 0.56, 0.74, 0.88, 1],
 
   /** Tier for the item at popularity rank `index` (0 = most popular) out of `count`. */
   tierForRank(index, count) {

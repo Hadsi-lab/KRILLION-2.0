@@ -18,7 +18,7 @@ Open `index.html` in any browser (mobile or desktop). No backend.
 - Unlimited rounds per day. Progress, an in-progress round and stats are saved in the browser (`localStorage`).
 
 ## Rarity tiers (worst → best)
-In both modes, answers are ranked by popularity and split: top 20% Elmo, 15% Monster, 15% Noodle, 20% Grouchy, 15% Abby, last 15% Snuffy (`TIER_CUTS` in `js/scoring.js`).
+In both modes, answers are ranked by popularity and split: top 19% Elmo, 19% Monster, 18% Noodle, 18% Grouchy, 14% Abby, last 12% Snuffy (easiest to hardest, each tier no bigger than the one before) (`TIER_CUTS` in `js/scoring.js`).
 
 | Tier | Points |
 |---|---|
