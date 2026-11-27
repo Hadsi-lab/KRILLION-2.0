@@ -17,7 +17,8 @@ window.SS = window.SS || {};
   });
 
   const G = { m: "male", f: "female" };
-  const GENRE = { pop: "pop", country: "country", rock: "rock", rnb: "R&B", latin: "Latin" };
+  // Rock and Latin are tagged in the data but not asked as categories.
+  const GENRE = { pop: "pop", country: "country", rnb: "R&B" };
   const COUNTRY = { au: "Australian", uk: "British", ca: "Canadian" };
 
   // Category definitions: [id, label, filter]
@@ -25,10 +26,8 @@ window.SS = window.SS || {};
   Object.entries(G).forEach(([g, word]) => defs.push([`${word}`, `${word} singer`, (s) => s.gender === g]));
   Object.entries(GENRE).forEach(([genre, word]) => {
     defs.push([genre, `${word} singer`, (s) => s.genres.includes(genre)]);
-    if (genre !== "latin") {
-      Object.entries(G).forEach(([g, gw]) =>
-        defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
-    }
+    Object.entries(G).forEach(([g, gw]) =>
+      defs.push([`${gw}-${genre}`, `${gw} ${word} singer`, (s) => s.gender === g && s.genres.includes(genre)]));
   });
   Object.entries(COUNTRY).forEach(([c, word]) => defs.push([c, `${word} singer`, (s) => s.country === c]));
 

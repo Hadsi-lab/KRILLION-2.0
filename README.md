@@ -43,7 +43,7 @@ node tools/check-playlist.js data/playlists/<name>.csv
 This confirms every playlist song is accepted and lists artists that are not question artists. Only `Track Name`, `Artist Name(s)` and `Popularity` are kept from the export.
 
 ## Singer mode
-`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories (singer, male/female, pop/rock/country/R&B by gender, Latin, Australian, British, Canadian) are built from those fields. Within each category, singers are ranked by popularity and split into tiers (top 25% Elmo ... bottom 6% Snuffy). A known singer who doesn't fit the category gets a "doesn't count as..." message.
+`js/data/singers.js` lists about 560 singers with gender, genres, country and a 0-100 popularity estimate. Band lead singers count as singers; band names don't. Categories (singer, male/female, pop/country/R&B by gender, Australian, British, Canadian; no rock or Latin questions) are built from those fields. Within each category, singers are ranked by popularity and split into tiers (top 25% Elmo ... bottom 6% Snuffy). A known singer who doesn't fit the category gets a "doesn't count as..." message.
 
 ## Structure
 | File | Responsibility |
